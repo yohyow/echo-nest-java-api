@@ -1,0 +1,4 @@
+mkdir EchoNestj
+cp docs/README.TXT  EchoNestj
+cp dist/EchoNestAPI.jar EchoNestj
+cp docs/license.txt EchoNestj
