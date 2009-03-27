@@ -1,0 +1,1 @@
+java -DECHO_NEST_API_PREFIX=http://developer2.echonest.com/api/ -DECHO_NEST_API_KEY=LPPYGWENLGVWIFDVW -jar dist/EchoNestAPI.jar
