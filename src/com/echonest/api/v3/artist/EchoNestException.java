@@ -3,7 +3,7 @@
  * See "license.txt" for terms
  */
 
-package com.echonest.api.v3;
+package com.echonest.api.v3.artist;
 
 /**
  * Represents echo nest oriented exceptions

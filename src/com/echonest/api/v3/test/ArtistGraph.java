@@ -4,10 +4,10 @@
  */
 package com.echonest.api.v3.test;
 
-import com.echonest.api.v3.Scored;
-import com.echonest.api.v3.Artist;
-import com.echonest.api.v3.EchoNest;
-import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.artist.Scored;
+import com.echonest.api.v3.artist.Artist;
+import com.echonest.api.v3.artist.ArtistAPI;
+import com.echonest.api.v3.artist.EchoNestException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class ArtistGraph {
     private List<Scored<Artist>> workQueue = new ArrayList<Scored<Artist>>();
-    private EchoNest echoNest = new EchoNest();
+    private ArtistAPI echoNest = new ArtistAPI();
     private Set<Artist> plottedSet = new HashSet<Artist>();
 
     ArtistGraph() throws EchoNestException {

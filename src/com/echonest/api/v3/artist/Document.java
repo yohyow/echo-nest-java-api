@@ -2,7 +2,7 @@
  * (c) 2009  The Echo Nest
  * See "license.txt" for terms
  */
-package com.echonest.api.v3;
+package com.echonest.api.v3.artist;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

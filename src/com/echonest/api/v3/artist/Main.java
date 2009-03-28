@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.echonest.api.v3;
+package com.echonest.api.v3.artist;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            EchoNest echoNest = new EchoNest();
+            ArtistAPI echoNest = new ArtistAPI();
             String artistQuery = "Weezer";
             if (args.length > 0) {
                 artistQuery = args[0];
