@@ -5,9 +5,9 @@
 package com.echonest.api.v3.test;
 
 import com.echonest.api.util.Utilities;
-import com.echonest.api.v3.Artist;
-import com.echonest.api.v3.EchoNest;
-import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.artist.Artist;
+import com.echonest.api.v3.artist.ArtistAPI;
+import com.echonest.api.v3.artist.EchoNestException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -21,9 +21,9 @@ import java.util.List;
  */
 public class NameResolutionTester {
 
-    private EchoNest echoNest;
+    private ArtistAPI echoNest;
 
-    NameResolutionTester(EchoNest en) {
+    NameResolutionTester(ArtistAPI en) {
         this.echoNest = en;
     }
 

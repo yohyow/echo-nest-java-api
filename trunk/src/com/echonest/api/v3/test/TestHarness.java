@@ -4,12 +4,12 @@
  */
 package com.echonest.api.v3.test;
 
-import com.echonest.api.v3.Scored;
-import com.echonest.api.v3.Artist;
-import com.echonest.api.v3.Audio;
-import com.echonest.api.v3.DocumentList;
-import com.echonest.api.v3.EchoNest;
-import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.artist.Scored;
+import com.echonest.api.v3.artist.Artist;
+import com.echonest.api.v3.artist.Audio;
+import com.echonest.api.v3.artist.DocumentList;
+import com.echonest.api.v3.artist.ArtistAPI;
+import com.echonest.api.v3.artist.EchoNestException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,14 +22,14 @@ import java.util.Map;
  */
 public class TestHarness {
 
-    private EchoNest echoNest;
+    private ArtistAPI echoNest;
     private Map<String, List<Test>> testSets = new HashMap<String, List<Test>>();
     private boolean autoAdvance = true;
     private Artist curArtist = null;
     private HashSet<Artist> visited = new HashSet<Artist>();
     private List<Artist> artistQueue = new ArrayList<Artist>();
 
-    TestHarness(EchoNest en) throws EchoNestException {
+    TestHarness(ArtistAPI en) throws EchoNestException {
         echoNest = en;
         echoNest.setTrace(false);
 
@@ -38,7 +38,7 @@ public class TestHarness {
 
         // collect artists
 
-        List<Scored<Artist>> hotArtists = echoNest.getTopHotttArtists(EchoNest.MAX_ROWS);
+        List<Scored<Artist>> hotArtists = echoNest.getTopHotttArtists(ArtistAPI.MAX_ROWS);
         for (Scored<Artist> sartist : hotArtists) {
             artistQueue.add(sartist.getItem());
         }
@@ -55,7 +55,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                echoNest.getAudio(getArtistID(), 0, EchoNest.MAX_ROWS);
+                echoNest.getAudio(getArtistID(), 0, ArtistAPI.MAX_ROWS);
                 return true;
             }
         });
@@ -67,7 +67,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                echoNest.getBlogs(getArtistID(), 0, EchoNest.MAX_ROWS);
+                echoNest.getBlogs(getArtistID(), 0, ArtistAPI.MAX_ROWS);
                 return true;
             }
         });
@@ -135,7 +135,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                echoNest.getNews(getArtistID(), 0, EchoNest.MAX_ROWS);
+                echoNest.getNews(getArtistID(), 0, ArtistAPI.MAX_ROWS);
                 return true;
             }
         });
@@ -147,7 +147,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                echoNest.getReviews(getArtistID(), 0, EchoNest.MAX_ROWS);
+                echoNest.getReviews(getArtistID(), 0, ArtistAPI.MAX_ROWS);
                 return true;
             }
         });
@@ -171,8 +171,8 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                List<Scored<Artist>> artists = echoNest.getSimilarArtists(getArtistID(), 0, EchoNest.MAX_ROWS);
-                return artists.size() == EchoNest.MAX_ROWS;
+                List<Scored<Artist>> artists = echoNest.getSimilarArtists(getArtistID(), 0, ArtistAPI.MAX_ROWS);
+                return artists.size() == ArtistAPI.MAX_ROWS;
             }
         });
 
@@ -195,7 +195,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                echoNest.getVideo(getArtistID(), 0, EchoNest.MAX_ROWS);
+                echoNest.getVideo(getArtistID(), 0, ArtistAPI.MAX_ROWS);
                 return true;
             }
         });
@@ -207,7 +207,7 @@ public class TestHarness {
             }
 
             public boolean go() throws Exception {
-                return echoNest.getTopHotttArtists(EchoNest.MAX_ROWS).size() == EchoNest.MAX_ROWS;
+                return echoNest.getTopHotttArtists(ArtistAPI.MAX_ROWS).size() == ArtistAPI.MAX_ROWS;
             }
         });
     }
@@ -223,7 +223,7 @@ public class TestHarness {
 
             public boolean go() throws Exception {
                 int start = 0;
-                int count = EchoNest.MAX_ROWS;
+                int count = ArtistAPI.MAX_ROWS;
                 int total = 0;
                 while (true) {
                     System.out.printf("Call %d/%d/%d\n", start, count, total);
@@ -245,8 +245,8 @@ public class TestHarness {
                     }
 
                     count = results.getTotal() - start;
-                    if (count > EchoNest.MAX_ROWS) {
-                        count = EchoNest.MAX_ROWS;
+                    if (count > ArtistAPI.MAX_ROWS) {
+                        count = ArtistAPI.MAX_ROWS;
                     }
 
                     // check to make sure total doesn't change
@@ -330,7 +330,7 @@ public class TestHarness {
         visited.add(curArtist);
 
         try {
-            List<Scored<Artist>> similarArtists = echoNest.getSimilarArtists(curArtist, 0, EchoNest.MAX_ROWS);
+            List<Scored<Artist>> similarArtists = echoNest.getSimilarArtists(curArtist, 0, ArtistAPI.MAX_ROWS);
             for (Scored<Artist> sartist : similarArtists) {
                 if (!visited.contains(sartist.getItem())) {
                     artistQueue.add(sartist.getItem());

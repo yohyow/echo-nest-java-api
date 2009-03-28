@@ -5,7 +5,7 @@
 
 package com.echonest.api.util;
 
-import com.echonest.api.v3.Scored;
+import com.echonest.api.v3.artist.Scored;
 import java.util.Comparator;
 
 /**

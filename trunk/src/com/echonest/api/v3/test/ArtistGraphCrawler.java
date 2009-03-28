@@ -5,10 +5,10 @@
 
 package com.echonest.api.v3.test;
 
-import com.echonest.api.v3.Scored;
-import com.echonest.api.v3.Artist;
-import com.echonest.api.v3.EchoNest;
-import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.artist.Scored;
+import com.echonest.api.v3.artist.Artist;
+import com.echonest.api.v3.artist.ArtistAPI;
+import com.echonest.api.v3.artist.EchoNestException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashSet;
@@ -21,9 +21,9 @@ import java.util.Set;
  * @author plamere
  */
 public class ArtistGraphCrawler {
-    private EchoNest echoNest;
+    private ArtistAPI echoNest;
 
-    ArtistGraphCrawler(EchoNest en) {
+    ArtistGraphCrawler(ArtistAPI en) {
         this.echoNest = en;
     }
 
@@ -86,7 +86,7 @@ public class ArtistGraphCrawler {
     }
 
     public static void main(String[] args) throws EchoNestException {
-        EchoNest echoNest = new EchoNest();
+        ArtistAPI echoNest = new ArtistAPI();
         //echoNest.setTrace(true);
         ArtistGraphCrawler agc = new ArtistGraphCrawler(echoNest);
         agc.crawl("crawl.dat");
