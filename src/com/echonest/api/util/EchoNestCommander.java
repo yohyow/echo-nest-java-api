@@ -5,7 +5,10 @@
 package com.echonest.api.util;
 
 import com.echonest.api.v3.artist.*;
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -160,18 +163,48 @@ public class EchoNestCommander {
     }
 
     protected Document sendCommand(String name, String url) throws IOException, EchoNestException {
-        Document doc = cache.get(url);
+        return sendCommand(name, url, false);
+    }
+
+    protected Document sendCommand(String name, String url, File file) throws IOException, EchoNestException {
+        StatsManager.Tracker tracker = sm.start(name);
+        try {
+            Document doc = commander.sendCommand(name, file);
+            checkStatus(doc);
+            return doc;
+        } finally {
+            sm.close(tracker);
+        }
+    }
+
+    protected Document sendCommand(String name, String url, boolean usePost) throws IOException, EchoNestException {
+        Document doc = null;
+
+        if (!usePost) {
+            doc = cache.get(url);
+        }
+
         if (doc == null) {
             StatsManager.Tracker tracker = sm.start(name);
             try {
-                doc = commander.sendCommand(url);
+                doc = commander.sendCommand(url, usePost);
                 checkStatus(doc);
                 sm.end(tracker);
-                cache.put(url, doc);
+                if (!usePost) {
+                    cache.put(url, doc);
+                }
             } finally {
                 sm.close(tracker);
             }
         }
         return doc;
+    }
+
+    protected String encode(String parameter) {
+        try {
+            return URLEncoder.encode(parameter, "utf-8");
+        } catch (UnsupportedEncodingException ex) {
+            return parameter;
+        }
     }
 }

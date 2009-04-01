@@ -10,7 +10,10 @@
 package com.echonest.api.util;
 
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +21,7 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -149,7 +153,7 @@ public class Commander {
 
     public Document sendCommand(String command, File file) throws IOException {
         Document document = null;
-        InputStream is = sendCommandRaw(command, true);
+        InputStream is = upload(command, file);
         commandsSent++;
 
         synchronized (builder) {
@@ -315,5 +319,83 @@ public class Commander {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+
+    public InputStream upload(String command, File file) throws IOException {
+        HttpURLConnection conn = null;
+        DataOutputStream dos = null;
+        DataInputStream inStream = null;
+
+        String lineEnd = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "*****";
+
+        int bytesRead, bytesAvailable, bufferSize;
+        byte[] buffer;
+        int maxBufferSize = 1 * 1024 * 1024;
+
+        String fullCommand = prefix + command + fixSuffix(command, suffix);
+
+        long curGap = System.currentTimeMillis() - lastCommandTime;
+        long delayTime = minimumCommandPeriod - curGap;
+
+
+        delay(delayTime);
+
+        // URL url = new URL(fullCommand);
+        URL url = null;
+        try {
+            URI uri = new URI(fullCommand);
+            url = uri.toURL();
+        } catch (URISyntaxException e) {
+            throw new IOException("Bad URL " + e);
+        } catch (MalformedURLException e) {
+            throw new IOException("Bad URL " + e);
+        }
+
+        if (trace || traceSends) {
+            System.out.println("Sending-->     " + url);
+        }
+        if (logFile != null) {
+            logFile.println("Sending-->     " + url);
+        }
+
+        FileInputStream fileInputStream = new FileInputStream(file);
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+        dos = new DataOutputStream(conn.getOutputStream());
+        dos.writeBytes(twoHyphens + boundary + lineEnd);
+        dos.writeBytes("Content-Disposition: form-data; name=\"upload\";" + " filename=\"" + file.getName() + "\"" + lineEnd);
+        dos.writeBytes(lineEnd);
+
+        bytesAvailable = fileInputStream.available();
+        bufferSize = Math.min(bytesAvailable, maxBufferSize);
+        buffer = new byte[bufferSize];
+
+        bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+
+        while (bytesRead > 0) {
+            dos.write(buffer, 0, bufferSize);
+            bytesAvailable = fileInputStream.available();
+            bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        }
+
+        // send multipart form data necesssary after file data...
+
+        dos.writeBytes(lineEnd);
+        dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+        // close streams
+
+        fileInputStream.close();
+        dos.flush();
+        dos.close();
+        return conn.getInputStream();
     }
 }

@@ -16,9 +16,13 @@ import com.echonest.api.v3.artist.News;
 import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
 import com.echonest.api.v3.artist.Video;
+import com.echonest.api.v3.track.TrackAPI;
+import com.echonest.api.v3.track.TrackStatus;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,12 +36,14 @@ import java.util.Map;
 public class EchonestDevShell {
 
     private Shell shell;
-    private ArtistAPI echoNest;
+    private ArtistAPI artistAPI;
+    private TrackAPI trackAPI;
     private Map<String, Artist> artistCache = new HashMap<String, Artist>();
     private TestHarness testHarness;
 
     EchonestDevShell() throws EchoNestException {
-        echoNest = new ArtistAPI();
+        artistAPI = new ArtistAPI();
+        trackAPI = new TrackAPI();
         shell = new Shell();
         shell.setPrompt("nest% ");
         addEchoNestCommands();
@@ -66,7 +72,7 @@ public class EchonestDevShell {
         shell.add("search_artist", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                List<Artist> artists = echoNest.searchArtist(ci.mash(args, 1), false);
+                List<Artist> artists = artistAPI.searchArtist(ci.mash(args, 1), false);
                 for (Artist artist : artists) {
                     System.out.println(artist.getId() + " " + artist.getName());
                 }
@@ -93,7 +99,7 @@ public class EchonestDevShell {
                 }
 
                 if (testHarness == null) {
-                    testHarness = new TestHarness(echoNest);
+                    testHarness = new TestHarness(artistAPI);
                 }
 
                 testHarness.runTests(tests, count);
@@ -108,7 +114,7 @@ public class EchonestDevShell {
         shell.add("search_artist_sl", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                List<Artist> artists = echoNest.searchArtist(ci.mash(args, 1), true);
+                List<Artist> artists = artistAPI.searchArtist(ci.mash(args, 1), true);
                 for (Artist artist : artists) {
                     System.out.println(artist.getId() + " " + artist.getName());
                 }
@@ -126,7 +132,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Similarity for " + artist.getName());
-                    List<Scored<Artist>> artists = echoNest.getSimilarArtists(artist, 0, ArtistAPI.MAX_ROWS);
+                    List<Scored<Artist>> artists = artistAPI.getSimilarArtists(artist, 0, ArtistAPI.MAX_ROWS);
                     for (Scored<Artist> sartist : artists) {
                         System.out.printf("  %.2f %s\n", sartist.getScore(), sartist.getItem().getName());
                     }
@@ -151,10 +157,10 @@ public class EchonestDevShell {
                 } else {
                     String path = args[1];
                     if (path.startsWith("http:")) {
-                        String id = echoNest.uploadTrack(new URL(path), false);
+                        String id = artistAPI.uploadTrack(new URL(path), false);
                         System.out.println("ID is: " + id);
                     } else {
-                        String id = echoNest.uploadTrack(new File(path), false);
+                        String id = artistAPI.uploadTrack(new File(path), false);
                         System.out.println("ID is: " + id);
                     }
                 }
@@ -175,7 +181,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Blogs for " + artist.getName());
-                    DocumentList<Blog> blogs = echoNest.getBlogs(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Blog> blogs = artistAPI.getBlogs(artist, 0, ArtistAPI.MAX_ROWS);
                     System.out.printf("Total Blogs %d\n", blogs.getTotal());
                     for (Blog blog : blogs.getDocuments()) {
                         blog.dump();
@@ -197,7 +203,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Audio for " + artist.getName());
-                    DocumentList<Audio> audioList = echoNest.getAudio(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Audio> audioList = artistAPI.getAudio(artist, 0, ArtistAPI.MAX_ROWS);
                     System.out.printf("Total audio %d\n", audioList.getTotal());
                     for (Audio audio : audioList.getDocuments()) {
                         audio.dump();
@@ -219,7 +225,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Video for " + artist.getName());
-                    DocumentList<Video> videoList = echoNest.getVideo(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Video> videoList = artistAPI.getVideo(artist, 0, ArtistAPI.MAX_ROWS);
                     System.out.printf("Total audio %d\n", videoList.getTotal());
                     for (Video video : videoList.getDocuments()) {
                         video.dump();
@@ -241,7 +247,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("News for " + artist.getName());
-                    DocumentList<News> newsList = echoNest.getNews(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<News> newsList = artistAPI.getNews(artist, 0, ArtistAPI.MAX_ROWS);
                     System.out.printf("Total news %d\n", newsList.getTotal());
                     for (News news : newsList.getDocuments()) {
                         news.dump();
@@ -263,7 +269,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Reviews for " + artist.getName());
-                    DocumentList<Review> reviews = echoNest.getReviews(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Review> reviews = artistAPI.getReviews(artist, 0, ArtistAPI.MAX_ROWS);
                     System.out.printf("Total Reviews %d\n", reviews.getTotal());
                     for (Review review : reviews.getDocuments()) {
                         review.dump();
@@ -285,7 +291,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("URLS for " + artist.getName());
-                    Map<String, String> urlMap = echoNest.getUrls(artist);
+                    Map<String, String> urlMap = artistAPI.getUrls(artist);
                     List<String> keys = new ArrayList<String>(urlMap.keySet());
                     Collections.sort(keys);
                     for (String key : keys) {
@@ -307,7 +313,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
-                    System.out.println("Familiarty for " + artist.getName() + " " + echoNest.getFamiliarity(artist));
+                    System.out.println("Familiarty for " + artist.getName() + " " + artistAPI.getFamiliarity(artist));
                 } else {
                     System.out.println("Can't find artist");
                 }
@@ -325,7 +331,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     artistReport(artist.getId(), true);
-                    System.out.println("Familiarty for " + artist.getName() + " " + echoNest.getFamiliarity(artist));
+                    System.out.println("Familiarty for " + artist.getName() + " " + artistAPI.getFamiliarity(artist));
                 } else {
                     System.out.println("Can't find artist");
                 }
@@ -358,7 +364,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
-                    System.out.println("Hotttnesss for " + artist.getName() + " " + echoNest.getHotness(artist));
+                    System.out.println("Hotttnesss for " + artist.getName() + " " + artistAPI.getHotness(artist));
                 } else {
                     System.out.println("Can't find artist");
                 }
@@ -370,10 +376,27 @@ public class EchonestDevShell {
             }
         });
 
+        shell.add("get_goodness", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                Artist artist = getArtist(ci.mash(args, 1));
+                if (artist != null) {
+                    System.out.println("Goodness for " + artist.getName() + " " + artistAPI.getGoodness(artist));
+                } else {
+                    System.out.println("Can't find artist");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets goodness for an artist";
+            }
+        });
+
         shell.add("top_hot", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                List<Scored<Artist>> hotArtists = echoNest.getTopHotttArtists(ArtistAPI.MAX_ROWS);
+                List<Scored<Artist>> hotArtists = artistAPI.getTopHotttArtists(ArtistAPI.MAX_ROWS);
                 for (Scored<Artist> sartist : hotArtists) {
                     System.out.printf("%.2f %s\n", sartist.getScore(), sartist.getItem().getName());
                 }
@@ -388,7 +411,7 @@ public class EchonestDevShell {
         shell.add("stats", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                echoNest.showStats();
+                artistAPI.showStats();
                 return "";
             }
 
@@ -401,7 +424,7 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
-                    echoNest.setTrace(args[1].equals("true"));
+                    artistAPI.setTrace(args[1].equals("true"));
                 } else {
                     System.out.println("Usage: trace true|false");
                 }
@@ -417,7 +440,7 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
-                    echoNest.saveCache(args[1]);
+                    artistAPI.saveCache(args[1]);
                 } else {
                     System.out.println("Usage: saveCache filename");
                 }
@@ -433,7 +456,7 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
-                    echoNest.loadCache(args[1]);
+                    artistAPI.loadCache(args[1]);
                 } else {
                     System.out.println("Usage: loadCache filename");
                 }
@@ -450,7 +473,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     long cacheTime = Integer.parseInt(args[1]) * 1000L;
-                    echoNest.setMaxCacheTime(cacheTime);
+                    artistAPI.setMaxCacheTime(cacheTime);
                 } else {
                     System.out.println("Usage: setMaxCacheTime secs");
                 }
@@ -466,7 +489,7 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 1) {
-                    System.out.println("cache time: " + echoNest.getMaxCacheTime() / 1000L);
+                    System.out.println("cache time: " + artistAPI.getMaxCacheTime() / 1000L);
                 } else {
                     System.out.println("Usage: getMaxCacheTime");
                 }
@@ -477,15 +500,73 @@ public class EchonestDevShell {
                 return "gets the cache time";
             }
         });
+
+        shell.add("trackUpload", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length >= 2) {
+                    String arg = ci.mash(args, 1);
+                    TrackStatus ts = null;
+                    if (arg.startsWith("http:")) {
+                        ts = trackAPI.uploadTrack(new URL(arg), false);
+                    } else {
+                        ts = trackAPI.uploadTrack(new File(arg), false);
+                    }
+                    System.out.println("Status: " + ts);
+                } else {
+                    System.out.println("Usage: trackUpload file|url");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "uploads a track";
+            }
+        });
+
+        shell.add("trackDuration", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    String arg = args[1];
+                    float duration = trackAPI.getDuration(arg);
+                    System.out.println("Duration: " + duration);
+                } else {
+                    System.out.println("Usage: trackDuration id|md5");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets the duration of a track";
+            }
+        });
+
+        shell.add("trackWait", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    String arg = args[1];
+                    trackAPI.waitForAnalysis(arg, 60000);
+                } else {
+                    System.out.println("Usage: trackWait id|md5");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "waits for an analysis to be complete";
+            }
+        });
     }
 
     private Artist getArtist(String name) throws EchoNestException {
         Artist artist = artistCache.get(name);
         if (artist == null) {
             if (name.startsWith("music://")) {
-                artist = echoNest.getProfile(name);
+                artist = artistAPI.getProfile(name);
             } else {
-                List<Artist> artists = echoNest.searchArtist(name, false);
+                List<Artist> artists = artistAPI.searchArtist(name, false);
                 if (artists.size() > 0) {
                     artist = artists.get(0);
                     artistCache.put(name, artist);
@@ -534,7 +615,7 @@ public class EchonestDevShell {
     }
 
     private void artistReport(String id, boolean header) throws EchoNestException {
-        Artist artist = echoNest.getProfile(id);
+        Artist artist = artistAPI.getProfile(id);
         if (artist != null) {
             if (header) {
                 System.out.println("<html>");
@@ -558,7 +639,7 @@ public class EchonestDevShell {
 
     private void artistNews(Artist artist) throws EchoNestException {
         System.out.println("<h2> News for " + artist.getName() + "</h2>");
-        DocumentList<News> newsList = echoNest.getNews(artist.getId(), 0, MAX_NEWS);
+        DocumentList<News> newsList = artistAPI.getNews(artist.getId(), 0, MAX_NEWS);
         for (News news : newsList.getDocuments()) {
             System.out.println("<h3>" + mklink(news.getURL(), news.getName()) + "</h3>");
             System.out.println("From: " + news.getURL() +"<p>");
@@ -568,7 +649,7 @@ public class EchonestDevShell {
 
     private void artistBlogs(Artist artist) throws EchoNestException {
         System.out.println("<h2> Blogs for " + artist.getName() + "</h2>");
-        DocumentList<Blog> blogs = echoNest.getBlogs(artist.getId(), 0, MAX_NEWS);
+        DocumentList<Blog> blogs = artistAPI.getBlogs(artist.getId(), 0, MAX_NEWS);
         for (Blog blog : blogs.getDocuments()) {
             System.out.println("<h3>" + mklink(blog.getURL(), blog.getName()) + "</h3>");
             System.out.println("From: " + blog.getURL() +"<p>");
@@ -578,7 +659,7 @@ public class EchonestDevShell {
 
     private void artistReviews(Artist artist) throws EchoNestException {
         System.out.println("<h2> Reviews for " + artist.getName() + "</h2>");
-        DocumentList<Review> reviews = echoNest.getReviews(artist.getId(), 0, MAX_NEWS);
+        DocumentList<Review> reviews = artistAPI.getReviews(artist.getId(), 0, MAX_NEWS);
         for (Review review : reviews.getDocuments()) {
             System.out.println("<h3>" + mklink(review.getURL(), review.getName()) + "</h3>");
             System.out.println("From: " + review.getURL() +"<p>");

@@ -7,8 +7,6 @@ package com.echonest.api.v3.artist;
 import com.echonest.api.util.EchoNestCommander;
 import com.echonest.api.util.XmlUtil;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -349,13 +347,6 @@ public class ArtistAPI extends EchoNestCommander {
         }
     }
 
-    private String encode(String parameter) {
-        try {
-            return URLEncoder.encode(parameter, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            return parameter;
-        }
-    }
 
     /**
      * 
@@ -426,6 +417,41 @@ public class ArtistAPI extends EchoNestCommander {
     public float getHotness(Artist artist) throws EchoNestException {
         return getHotness(artist.getId());
     }
+
+    /**
+     * Returns a numerical description of how good an artist currently is.
+     * @param artist  the artist of interest
+     * @return a number between 0 and 1. 1 is most hot
+     * @throws com.echonest.api.v3.EchoNestException
+     */
+    public Goodness getGoodness(Artist artist) throws EchoNestException {
+        return getGoodness(artist.getId());
+    }
+
+    /**
+     * Returns a numerical description of how hottt an artist currently is.
+     * @param id the id of the artist of interest
+     * @return a number between 0 and 1. 1 is most hot
+     * @throws com.echonest.api.v3.EchoNestException
+     */
+    public Goodness getGoodness(String id) throws EchoNestException {
+        try {
+            float goodness = 0f;
+            String cmdURL = "get_goodness?id=" + id;
+            Document doc = sendCommand("get_goodness", cmdURL);
+            Element docElement = doc.getDocumentElement();
+            Element artistElement = XmlUtil.getFirstElement(docElement, "artist");
+            String sGood = XmlUtil.getDescendentText(artistElement, "goodness");
+            if (sGood != null) {
+                goodness = Float.parseFloat(sGood);
+            }
+            String instaCritic = XmlUtil.getDescendentText(artistElement, "instant_critic");
+            return new Goodness(goodness, instaCritic);
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
+    }
+
 
     /**
      * Retrieves a list of the top hottt artists
