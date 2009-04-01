@@ -7,19 +7,22 @@
  * See "license.txt" for terms
  *
  */
-
 package com.echonest.api.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -29,7 +32,7 @@ import java.util.regex.Pattern;
  * @author plamere
  */
 public class Utilities {
-    
+
     /** Creates a new instance of Utilities */
     private Utilities() {
     }
@@ -60,7 +63,6 @@ public class Utilities {
      *    Number folding - '3' vs. 'three'
      *    Non english names
      */
-    
     static Pattern deletedChars = Pattern.compile("[\"'.]");
     static Pattern ampersand = Pattern.compile("&");
     static Pattern everythingBut = Pattern.compile("[^\\p{Alnum}]");
@@ -73,7 +75,7 @@ public class Utilities {
     static Pattern multiDash = Pattern.compile("_{2,}");
     static Pattern unprintable = Pattern.compile("[^\\p{Print}]");
     static Pattern punctuation = Pattern.compile("[\\p{Punct}]");
-    
+
     public static String printable(String in) {
         return unprintable.matcher(in).replaceAll("");
     }
@@ -91,16 +93,17 @@ public class Utilities {
      * 5. Always drop a leading "the".
      * 5A Always drop a leading indefinite article too
      */
+
     public static String normalize(String in) {
         String s;
         if (in == null) {
             return "";
         }
-        
+
         s = in.trim();
         s = s.toLowerCase();
-        s =  deletedChars.matcher(s).replaceAll("");
-        s =  ampersand.matcher(s).replaceAll(" and ");
+        s = deletedChars.matcher(s).replaceAll("");
+        s = ampersand.matcher(s).replaceAll(" and ");
         s = leadingDash.matcher(s).replaceAll("");
         s = trailingDash.matcher(s).replaceAll("");
         s = leadingThe.matcher(s).replaceAll("");
@@ -108,21 +111,19 @@ public class Utilities {
         s = leadingA.matcher(s).replaceAll("");
         s = trailingA.matcher(s).replaceAll("");
         s = multiDash.matcher(s).replaceAll("_");
-        s =  everythingBut.matcher(s).replaceAll("");
-        
+        s = everythingBut.matcher(s).replaceAll("");
+
         // if we've reduced the input down to nothing
         // fall back on input (necessary for non western
         // names
-        
+
         if (s.length() == 0) {
             s = in;
         }
-        
+
         //System.out.println(in + " BECOMES " + s);
         return s;
     }
-    
-    
     //static Pattern specialChars = Pattern.compile("[ -/:-@\\[-`]");
     //static Pattern specialChars = Pattern.compile("[<>/\\!#\\$]");
     static Pattern specialChars = Pattern.compile("[\\&,\\[\\]@\\-\\(\\)<>/\\!#\\$]");
@@ -138,17 +139,17 @@ public class Utilities {
     static Pattern leadingAnd = Pattern.compile("^and\\s+$");
     static Pattern trailingAnd = Pattern.compile("\\s+and$$");
     static Pattern parens = Pattern.compile("\\(.*\\)");
-    
+
     public static String normalizeForSearch(String in) {
         String s;
         if (in == null) {
             return "";
         }
-        
+
         s = in.trim();
         s = s.toLowerCase();
         s = parens.matcher(s).replaceAll("");
-        s =  specialChars.matcher(s).replaceAll(" ");
+        s = specialChars.matcher(s).replaceAll(" ");
         s = the.matcher(s).replaceAll(" ");
         s = indefiniteArticle.matcher(s).replaceAll(" ");
         s = andPattern.matcher(s).replaceAll(" ");
@@ -162,7 +163,7 @@ public class Utilities {
         s = trailingAnd.matcher(s).replaceAll(" ");
         return s;
     }
-    
+
     /**
      * returns a quoted version of s with all internal quotes escaped
      */
@@ -170,13 +171,11 @@ public class Utilities {
         String escaped = s.replaceAll("\\\"", "\\\\\"");
         return "\"" + escaped + "\"";
     }
-    private static Map<String,String> genreMap;
-    
-    
-    
+    private static Map<String, String> genreMap;
+
     public static String collapseGenre(String genre) {
         if (genreMap == null) {
-            Map<String, String> gMap = new HashMap<String,String>();
+            Map<String, String> gMap = new HashMap<String, String>();
             gMap.put("acid", "rock");
             gMap.put("alternative", "rock");
             gMap.put("alternative_and_punk", "rock");
@@ -256,12 +255,12 @@ public class Utilities {
             return mappedGenre;
         }
     }
-    
+
     public static String normalizeFilename(File file)
-    throws MalformedURLException {
+            throws MalformedURLException {
         return file.toURI().toURL().getFile();
     }
-    
+
     public static long binaryCopy(URL src, File dest) throws IOException {
         InputStream is = null;
         OutputStream os = null;
@@ -279,12 +278,12 @@ public class Utilities {
                     urc.setRequestProperty("User-Agent", "Mozilla/4.0");
                     is = new BufferedInputStream(urc.getInputStream());
                     int b;
-                    
+
                     while ((b = is.read()) != -1) {
                         os.write(b);
                         byteCount++;
                     }
-                    
+
                 } finally {
                     if (is != null) {
                         is.close();
@@ -299,7 +298,7 @@ public class Utilities {
         }
         return byteCount;
     }
-    
+
     public static long binaryCopyWget(URL src, File dest) throws IOException {
         String wgetPath = System.getProperty("wget");
         if (wgetPath == null) {
@@ -316,15 +315,15 @@ public class Utilities {
         }
         return dest.length();
     }
-    
+
     public static void log(String s) {
         System.out.println("   " + s);
     }
-    
+
     public static void err(String s) {
         System.out.println(" ERR  " + s);
     }
-    
+
     public static String jam(String[] args, int start) {
         StringBuilder sb = new StringBuilder();
         for (int i = start; i < args.length; i++) {
@@ -337,4 +336,33 @@ public class Utilities {
     public static String detag(String s) {
         return s.replaceAll("\\<.*?\\>", "");
     }
+
+    public static String md5(File f) throws IOException {
+        byte[] buffer = new byte[8192];
+        int read = 0;
+        InputStream is = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            is = new BufferedInputStream(new FileInputStream(f));
+            while ((read = is.read(buffer)) > 0) {
+                digest.update(buffer, 0, read);
+            }
+            byte[] md5sum = digest.digest();
+            BigInteger bigInt = new BigInteger(md5sum);
+            //BigInteger bigInt = new BigInteger(1, md5sum);
+            String output = bigInt.toString(16);
+            return output;
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("Can't find md5 algorithm");
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("md5 " + md5(new File("/Users/plamere/Downloads/Billy-Idol-Dancing-With-Myself-DONK-REMIX-14396.mp3")));
+    }
+
 }
