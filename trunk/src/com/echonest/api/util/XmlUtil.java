@@ -90,5 +90,23 @@ public class XmlUtil {
         }
         return null;
     }
+
+    public static float getDescendentTextAsFloat(Node node, String name, float defaultValue) throws IOException {
+        Node d = getDescendent(node, name);
+        if (d != null) {
+            String sval  = d.getTextContent().trim();
+            return Float.parseFloat(sval);
+        }
+        return defaultValue;
+    }
+
+    public static int getDescendentTextAsInt(Node node, String name, int defaultValue) throws IOException {
+        Node d = getDescendent(node, name);
+        if (d != null) {
+            String sval  = d.getTextContent().trim();
+            return Integer.parseInt(sval);
+        }
+        return defaultValue;
+    }
 }
 

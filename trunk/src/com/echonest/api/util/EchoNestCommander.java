@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -28,6 +29,7 @@ public class EchoNestCommander {
     private Commander commander;
     private StatsManager sm = new StatsManager();
     private ExpiringCache<Document> cache;
+    private String key;
 
     /**
      * Creates an instance of the EchoNest class using an API key specified in the 
@@ -50,6 +52,7 @@ public class EchoNestCommander {
             throw new EchoNestException(EchoNestException.ERR_NO_KEY, "No API key defined");
         }
 
+        this.key = key;
         try {
             //commander = new Commander("EchoNest", "http://developer.echonest.com/api/", "&version=3&api_key=" + key);
             if (prefix == null) {
@@ -72,6 +75,14 @@ public class EchoNestCommander {
             throw new EchoNestException(ioe);
         }
     //commander.setMinimumCommandPeriod(0);
+    }
+
+    /**
+     * Gets the API key in use
+     * @return the key
+     */
+    protected String getKey() {
+        return key;
     }
 
     /**
@@ -162,19 +173,19 @@ public class EchoNestCommander {
         }
     }
 
-    protected Document sendCommand(String name, String url) throws IOException, EchoNestException {
-        return sendCommand(name, url, false);
-    }
-
-    protected Document sendCommand(String name, String url, File file) throws IOException, EchoNestException {
+    protected Document postCommand(String name, String method, Map<String, Object> params) throws IOException, EchoNestException {
         StatsManager.Tracker tracker = sm.start(name);
         try {
-            Document doc = commander.sendCommand(name, file);
+            Document doc = commander.postCommand(method, params);
             checkStatus(doc);
             return doc;
         } finally {
             sm.close(tracker);
         }
+    }
+
+    protected Document sendCommand(String name, String url) throws IOException, EchoNestException {
+        return sendCommand(name, url, false);
     }
 
     protected Document sendCommand(String name, String url, boolean usePost) throws IOException, EchoNestException {

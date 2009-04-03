@@ -17,6 +17,9 @@ public class EchoNestException extends Exception {
      public final static int ERR_BAD_ID = -3;
      /** no api key was given */
      public final static int ERR_NO_KEY = -3;
+     /** MD5s mismatch */
+     public final static int ERR_BAD_MD5 = -4;
+
      private int code = -1;
      private String message;
 

@@ -348,8 +348,7 @@ public class Utilities {
                 digest.update(buffer, 0, read);
             }
             byte[] md5sum = digest.digest();
-            BigInteger bigInt = new BigInteger(md5sum);
-            //BigInteger bigInt = new BigInteger(1, md5sum);
+            BigInteger bigInt = new BigInteger(1, md5sum);
             String output = bigInt.toString(16);
             return output;
         } catch (NoSuchAlgorithmException e) {
