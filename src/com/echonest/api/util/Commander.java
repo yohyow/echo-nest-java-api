@@ -10,7 +10,6 @@
 package com.echonest.api.util;
 
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +26,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -151,9 +151,9 @@ public class Commander {
         return document;
     }
 
-    public Document sendCommand(String command, File file) throws IOException {
+    public Document postCommand(String command, Map<String, Object> params) throws IOException {
         Document document = null;
-        InputStream is = upload(command, file);
+        InputStream is = post(command, params);
         commandsSent++;
 
         synchronized (builder) {
@@ -161,6 +161,8 @@ public class Commander {
                 document = builder.parse(is);
             } catch (SAXException e) {
                 throw new IOException("SAX Parse Error " + e);
+            } catch (IOException e) {
+                e.printStackTrace();
             } finally {
                 is.close();
             }
@@ -321,28 +323,15 @@ public class Commander {
         this.timeout = timeout;
     }
 
-    public InputStream upload(String command, File file) throws IOException {
+    private InputStream post(String command, Map<String, Object> params) throws IOException {
+        String NEWLINE = "\r\n";
+        String PREFIX = "--";
+        String BOUNDARY = "-----------" + Long.toString(System.currentTimeMillis(), 16);
+
         HttpURLConnection conn = null;
         DataOutputStream dos = null;
-        DataInputStream inStream = null;
+        String fullCommand = prefix + command;
 
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";
-        String boundary = "*****";
-
-        int bytesRead, bytesAvailable, bufferSize;
-        byte[] buffer;
-        int maxBufferSize = 1 * 1024 * 1024;
-
-        String fullCommand = prefix + command + fixSuffix(command, suffix);
-
-        long curGap = System.currentTimeMillis() - lastCommandTime;
-        long delayTime = minimumCommandPeriod - curGap;
-
-
-        delay(delayTime);
-
-        // URL url = new URL(fullCommand);
         URL url = null;
         try {
             URI uri = new URI(fullCommand);
@@ -360,40 +349,55 @@ public class Commander {
             logFile.println("Sending-->     " + url);
         }
 
-        FileInputStream fileInputStream = new FileInputStream(file);
         conn = (HttpURLConnection) url.openConnection();
         conn.setDoInput(true);
         conn.setDoOutput(true);
+        conn.setAllowUserInteraction(false);
         conn.setUseCaches(false);
         conn.setRequestMethod("POST");
+        conn.setRequestProperty("Accept", "*/*");
         conn.setRequestProperty("Connection", "Keep-Alive");
-        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+        conn.setRequestProperty("Cache-Control", "no-cache");
+        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + BOUNDARY);
         dos = new DataOutputStream(conn.getOutputStream());
-        dos.writeBytes(twoHyphens + boundary + lineEnd);
-        dos.writeBytes("Content-Disposition: form-data; name=\"upload\";" + " filename=\"" + file.getName() + "\"" + lineEnd);
-        dos.writeBytes(lineEnd);
+        //dos = new DataOutputStream(System.out);
 
-        bytesAvailable = fileInputStream.available();
-        bufferSize = Math.min(bytesAvailable, maxBufferSize);
-        buffer = new byte[bufferSize];
+        for (String key : params.keySet()) {
+            dos.writeBytes(PREFIX);
+            dos.writeBytes(BOUNDARY);
+            dos.writeBytes(NEWLINE);
+            Object val = params.get(key);
 
-        bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            if (val instanceof File) {
+                File file = (File) val;
 
-        while (bytesRead > 0) {
-            dos.write(buffer, 0, bufferSize);
-            bytesAvailable = fileInputStream.available();
-            bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+                dos.writeBytes("Content-Disposition: form-data; name=\"file\";" + " filename=\"" + file.getName() + "\"" );
+                dos.writeBytes(NEWLINE);
+                dos.writeBytes("Content-Type: application/octet-stream" + "\"" );
+                dos.writeBytes(NEWLINE);
+                dos.writeBytes(NEWLINE);
+
+                InputStream is = new FileInputStream(file);
+                int r = 0;
+                byte[] data = new byte[1024];
+                while ((r = is.read(data, 0, data.length)) != -1) {
+                    dos.write(data, 0, r);
+                }
+                is.close();
+                dos.writeBytes(NEWLINE);
+            } else {
+                dos.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"");
+                dos.writeBytes(NEWLINE);
+                dos.writeBytes(NEWLINE);
+                dos.writeBytes(val.toString());
+                dos.writeBytes(NEWLINE);
+            }
         }
-
-        // send multipart form data necesssary after file data...
-
-        dos.writeBytes(lineEnd);
-        dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
+        dos.writeBytes(PREFIX);
+        dos.writeBytes(BOUNDARY);
+        dos.writeBytes(PREFIX);
+        dos.writeBytes(NEWLINE);
         // close streams
-
-        fileInputStream.close();
         dos.flush();
         dos.close();
         return conn.getInputStream();
