@@ -42,6 +42,9 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+/**
+ * A utility for interacting with REST style web services
+ */
 public class Commander {
 
     private String name;
@@ -59,6 +62,13 @@ public class Commander {
     private int tryCount = 5;
     private final int DEFAULT_TIMEOUT = 60 * 1000;
 
+    /**
+     * Creates a commander
+     * @param name the name of this commander
+     * @param prefix common url prefix for all commands
+     * @param suffix common url suffix for all 'get' commands
+     * @throws java.io.IOException
+     */
     public Commander(String name, String prefix, String suffix) throws IOException {
         this.name = name;
         this.prefix = prefix;
@@ -86,14 +96,26 @@ public class Commander {
         setTimeout(DEFAULT_TIMEOUT);
     }
 
+    /**
+     * Enable or disable tracing of URL get/posts
+     * @param traceSends
+     */
     public void setTraceSends(boolean traceSends) {
         this.traceSends = traceSends;
     }
 
+    /**
+     * Enable or disable tracing of URL get/posts and the returned data
+     * @param trace
+     */
     public void setTrace(boolean trace) {
         this.trace = trace;
     }
 
+    /**
+     * Sets the maximum number of retries before giving up
+     * @param retries
+     */
     public void setRetries(int retries) {
         tryCount = retries + 1;
         if (tryCount < 1) {
@@ -101,14 +123,26 @@ public class Commander {
         }
     }
 
+    /**
+     * Gets the maximum number of retries
+     * @return
+     */
     public int getRetries() {
         return tryCount - 1;
     }
 
+    /**
+     * Show some stats
+     */
     public void showStats() {
         System.out.printf("Commands sent to %s: %d\n", name, commandsSent);
     }
 
+    /**
+     * Encode a parameter 
+     * @param name
+     * @return
+     */
     public String encode(String name) {
         try {
             String encodedName = URLEncoder.encode(name, "UTF-8");
@@ -126,10 +160,23 @@ public class Commander {
         minimumCommandPeriod = minPeriod;
     }
 
+    /**
+     * Sends the command as a GET
+     * @param command the command to send
+     * @return an XML document
+     * @throws java.io.IOException
+     */
     public Document sendCommand(String command) throws IOException {
         return sendCommand(command, false);
     }
 
+    /**
+     * Sends the command
+     * @param command the command to send
+     * @param usePost if true, use a POST instead of a Get
+     * @return an XML document
+     * @throws java.io.IOException
+     */
     public Document sendCommand(String command, boolean usePost) throws IOException {
         Document document = null;
         InputStream is = sendCommandRaw(command, usePost);
