@@ -94,8 +94,7 @@ public class TrackAPI extends EchoNestCommander {
                 String md5 = trackElement.getAttribute("md5");
                 if (!fileMD5.equals(md5)) {
                     throw new EchoNestException(EchoNestException.ERR_BAD_MD5,
-                            "MD5 of analysis mismatches MD5 of file, found "
-                            + md5 + " expected " + fileMD5);
+                            "MD5 of analysis mismatches MD5 of file, found " + md5 + " expected " + fileMD5);
                 }
                 boolean ready = trackElement.getAttribute("md5").equals("true");
                 return trackID;
@@ -351,12 +350,53 @@ public class TrackAPI extends EchoNestCommander {
             List<Segment> results = new ArrayList<Segment>();
             NodeList nodes = analysisElement.getElementsByTagName("segments");
             for (int i = 0; i < nodes.getLength(); i++) {
+                Segment segment = new Segment();
+
                 Element segmentElement = (Element) nodes.item(i);
                 float startTime = Float.parseFloat(segmentElement.getAttribute("start"));
                 float duration = Float.parseFloat(segmentElement.getAttribute("duration"));
-                Element loudnessElement = XmlUtil.getFirstElement(segmentElement, "loudness");
-                // it is late friday .. I can't parse any more XML, this will have to wait
-                Segment segment = new Segment();
+
+                segment.setDuration(duration);
+                segment.setStart(startTime);
+
+                {
+                    // get the loudness info
+                    NodeList loudnessNodes = segmentElement.getElementsByTagName("dB");
+                    for (int j = 0; j < loudnessNodes.getLength(); j++) {
+                        Element dbElement = (Element) nodes.item(j);
+                        float db = Float.parseFloat(dbElement.getTextContent());
+                        if ("max".equalsIgnoreCase(dbElement.getAttribute("type"))) {
+                            float maxTime = Float.parseFloat(dbElement.getAttribute("time"));
+                            segment.setMaxLoudnessTimeOffset(maxTime);
+                            segment.setMaxLoudness(db);
+                        } else {
+                            segment.setStartLoudness(db);
+                        }
+                    }
+                }
+
+                {
+                    // get the pitches
+                    NodeList pitchNodes = segmentElement.getElementsByTagName("pitch");
+                    float[] pitch = new float[pitchNodes.getLength()];
+                    for (int j = 0; j < pitchNodes.getLength(); j++) {
+                        Element pitchElement = (Element) nodes.item(j);
+                        pitch[j] = Float.parseFloat(pitchElement.getTextContent());
+                    }
+                    segment.setPitches(pitch);
+                }
+
+                {
+                    // get the timbre coeffes
+                    NodeList coeffNodes = segmentElement.getElementsByTagName("coeff");
+                    float[] coeff = new float[coeffNodes.getLength()];
+                    for (int j = 0; j < coeffNodes.getLength(); j++) {
+                        Element coeffElement = (Element) nodes.item(j);
+                        coeff[j] = Float.parseFloat(coeffElement.getTextContent());
+                    }
+                    segment.setTimbre(coeff);
+                }
+
                 results.add(segment);
             }
             return results;

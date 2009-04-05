@@ -18,6 +18,7 @@ public class Segment {
     private float[] pitches;
     private float[] timbre;
 
+
     public float getDuration() {
         return duration;
     }
@@ -72,5 +73,25 @@ public class Segment {
 
     void setTimbre(float[] timbre) {
         this.timbre = timbre;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Start: " + start + " Dur: " + duration + "\n");
+        sb.append("Loudness: " + startLoudness + " max " + maxLoudness + " at " + maxLoudnessTimeOffset +"\n");
+
+        sb.append("Pitches: ");
+        for (int i = 0; i < pitches.length; i++) {
+            sb.append(pitches[i] + " ");
+        }
+        sb.append("\n");
+
+        sb.append("Timbre: ");
+        for (int i = 0; i < timbre.length; i++) {
+            sb.append(timbre[i] + " ");
+        }
+        sb.append("\n");
+
+        return sb.toString();
     }
 }

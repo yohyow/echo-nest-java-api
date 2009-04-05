@@ -350,7 +350,8 @@ public class Utilities {
             byte[] md5sum = digest.digest();
             BigInteger bigInt = new BigInteger(1, md5sum);
             String output = bigInt.toString(16);
-            return output;
+            // the MD5 needs to be 32 characters long.
+            return prepad(output, 32, '0');
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Can't find md5 algorithm");
         } finally {
@@ -358,6 +359,14 @@ public class Utilities {
                 is.close();
             }
         }
+    }
+
+    private static String prepad(String s, int len, char c) {
+        // slow but used so rarely, who cares.
+        while (s.length() < len) {
+            s = c + s;
+        }
+        return s;
     }
 
     public static void main(String[] args) throws Exception {
