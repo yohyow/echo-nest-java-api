@@ -16,8 +16,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * A client side ArtistAPI for the Echo Nest developer ArtistAPI.  The Echo Nest developer
- * ArtistAPI requires an ArtistAPI key. You can obtain a key at: http://developer.echonest.com/
+ * A client side API for the Echo Nest developer API.  The Echo Nest developer
+ * API requires an API key. You can obtain a key at: http://developer.echonest.com/
  *
  * This client supports cacheing of the return results. The cache is enabled by
  * default.
@@ -33,7 +33,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Creates an instance of the ArtistAPI class using an ArtistAPI key specified in the
      * the property ECHO_NEST_API_KEY
      * 
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public ArtistAPI() throws EchoNestException {
         this(System.getProperty("ECHO_NEST_API_KEY"));
@@ -42,7 +42,7 @@ public class ArtistAPI extends EchoNestCommander {
     /**
      * Creates an instance of the ArtistAPI class
      * @param key the ArtistAPI key (available at http://developer.echonest.com/ )
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public ArtistAPI(String key) throws EchoNestException {
         super(key, null);
@@ -53,7 +53,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Given an Echo Nest Identifier get  the associated artist
      * @param id an Echo Nest Identifier
      * @return an artist 
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public Artist getProfile(String id) throws EchoNestException {
 
@@ -80,7 +80,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param soundsLike if true, a 'sounds like' comparison is used in the search
      *  otherwise, only exact matches are returned.
      * @return a list of matching artists, ordered by how well they match the query.
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Artist> searchArtist(String artistName, boolean soundsLike) throws EchoNestException {
         List<Artist> artists = new ArrayList<Artist>();
@@ -113,7 +113,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of blogs about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Blog> getBlogs(Artist artist, int startRow, int count) throws EchoNestException {
         return getBlogs(artist.getId(), startRow, count);
@@ -125,7 +125,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of blogs about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Blog> getBlogs(String id, int startRow, int count) throws EchoNestException {
         try {
@@ -139,9 +139,9 @@ public class ArtistAPI extends EchoNestCommander {
             String sshown = similar.getAttribute("shown");
             String sstart = similar.getAttribute("start");
 
-            int found = Integer.parseInt(sfound);
-            int shown = Integer.parseInt(sshown);
-            int curStart = Integer.parseInt(sstart);
+            int found = parseInt("get_blogs found", sfound);
+            int shown = parseInt("get_blogs shown", sshown);
+            int curStart = parseInt("get_blogs start", sstart);
 
             DocumentList<Blog> list = new DocumentList<Blog>(found, curStart, shown);
 
@@ -161,7 +161,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of news about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<News> getNews(Artist artist, int startRow, int count) throws EchoNestException {
         return getNews(artist.getId(), startRow, count);
@@ -173,7 +173,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of news about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<News> getNews(String id, int startRow, int count) throws EchoNestException {
         try {
@@ -187,9 +187,9 @@ public class ArtistAPI extends EchoNestCommander {
             String sshown = similar.getAttribute("shown");
             String sstart = similar.getAttribute("start");
 
-            int found = Integer.parseInt(sfound);
-            int shown = Integer.parseInt(sshown);
-            int curStart = Integer.parseInt(sstart);
+            int found = parseInt("get_news found", sfound);
+            int shown = parseInt("get_news shown", sshown);
+            int curStart = parseInt("get_news start", sstart);
 
             DocumentList<News> list = new DocumentList<News>(found, curStart, shown);
 
@@ -209,7 +209,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Review> getReviews(Artist artist, int startRow, int count) throws EchoNestException {
         return getReviews(artist.getId(), startRow, count);
@@ -221,7 +221,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Review> getReviews(String id, int startRow, int count) throws EchoNestException {
         try {
@@ -235,9 +235,9 @@ public class ArtistAPI extends EchoNestCommander {
             String sshown = similar.getAttribute("shown");
             String sstart = similar.getAttribute("start");
 
-            int found = Integer.parseInt(sfound);
-            int shown = Integer.parseInt(sshown);
-            int curStart = Integer.parseInt(sstart);
+            int found = parseInt("get_reviews found", sfound);
+            int shown = parseInt("get_reviews shown", sshown);
+            int curStart = parseInt("get_reviews start", sstart);
 
             DocumentList<Review> list = new DocumentList<Review>(found, curStart, shown);
 
@@ -257,7 +257,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Audio> getAudio(Artist artist, int startRow, int count) throws EchoNestException {
         return getAudio(artist.getId(), startRow, count);
@@ -269,7 +269,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Audio> getAudio(String id, int startRow, int count) throws EchoNestException {
         try {
@@ -283,9 +283,9 @@ public class ArtistAPI extends EchoNestCommander {
             String sshown = similar.getAttribute("shown");
             String sstart = similar.getAttribute("start");
 
-            int found = Integer.parseInt(sfound);
-            int shown = Integer.parseInt(sshown);
-            int curStart = Integer.parseInt(sstart);
+            int found = parseInt("get_audio found", sfound);
+            int shown = parseInt("get_audio shown", sshown);
+            int curStart = parseInt("get_audio start", sstart);
 
             DocumentList<Audio> list = new DocumentList<Audio>(found, curStart, shown);
 
@@ -305,7 +305,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Video> getVideo(Artist artist, int startRow, int count) throws EchoNestException {
         return getVideo(artist.getId(), startRow, count);
@@ -317,7 +317,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param startRow the starting row of the query
      * @param count the number of items returned
      * @return a list of reviews about the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public DocumentList<Video> getVideo(String id, int startRow, int count) throws EchoNestException {
         try {
@@ -331,9 +331,9 @@ public class ArtistAPI extends EchoNestCommander {
             String sshown = similar.getAttribute("shown");
             String sstart = similar.getAttribute("start");
 
-            int found = Integer.parseInt(sfound);
-            int shown = Integer.parseInt(sshown);
-            int curStart = Integer.parseInt(sstart);
+            int found = parseInt("get_video found", sfound);
+            int shown = parseInt("get_video shown", sshown);
+            int curStart = parseInt("get_video start", sstart);
 
             DocumentList<Video> list = new DocumentList<Video>(found, curStart, shown);
 
@@ -353,7 +353,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Returns a numerical estimation of how familiar an artist currently is to the world. 
      * @param artist the artist of interest
      * @return a number between 0 and 1. 1 is most familiar
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public float getFamiliarity(Artist artist) throws EchoNestException {
         return getFamiliarity(artist.getId());
@@ -364,7 +364,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Returns a numerical estimation of how familiar an artist currently is to the world.
      * @param id the id of the artist of interest
      * @return a number between 0 and 1. 1 is most familiar
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public float getFamiliarity(String id) throws EchoNestException {
         try {
@@ -375,7 +375,7 @@ public class ArtistAPI extends EchoNestCommander {
             Element artistElement = XmlUtil.getFirstElement(docElement, "artist");
             String sFam = XmlUtil.getDescendentText(artistElement, "familiarity");
             if (sFam != null && sFam.length() > 0) {
-                familiarity = Float.parseFloat(sFam);
+                familiarity = parseFloat("familiarity", sFam);
             } else {
                 System.err.println("no familiarty for " + id);
             }
@@ -389,7 +389,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Returns a numerical description of how hottt an artist currently is.
      * @param id the id of the artist of interest
      * @return a number between 0 and 1. 1 is most hot
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public float getHotness(String id) throws EchoNestException {
         try {
@@ -400,7 +400,7 @@ public class ArtistAPI extends EchoNestCommander {
             Element artistElement = XmlUtil.getFirstElement(docElement, "artist");
             String sFam = XmlUtil.getDescendentText(artistElement, "hotttnesss");
             if (sFam != null) {
-                hotness = Float.parseFloat(sFam);
+                hotness = parseFloat("hotness", sFam);
             }
             return hotness;
         } catch (IOException ioe) {
@@ -412,44 +412,10 @@ public class ArtistAPI extends EchoNestCommander {
      * Returns a numerical description of how hottt an artist currently is.
      * @param artist  the artist of interest
      * @return a number between 0 and 1. 1 is most hot
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public float getHotness(Artist artist) throws EchoNestException {
         return getHotness(artist.getId());
-    }
-
-    /**
-     * Returns a numerical description of how good an artist currently is.
-     * @param artist  the artist of interest
-     * @return a number between 0 and 1. 1 is most hot
-     * @throws com.echonest.api.v3.EchoNestException
-     */
-    public Goodness getGoodness(Artist artist) throws EchoNestException {
-        return getGoodness(artist.getId());
-    }
-
-    /**
-     * Returns a numerical description of how hottt an artist currently is.
-     * @param id the id of the artist of interest
-     * @return a number between 0 and 1. 1 is most hot
-     * @throws com.echonest.api.v3.EchoNestException
-     */
-    public Goodness getGoodness(String id) throws EchoNestException {
-        try {
-            float goodness = 0f;
-            String cmdURL = "get_goodness?id=" + id;
-            Document doc = sendCommand("get_goodness", cmdURL);
-            Element docElement = doc.getDocumentElement();
-            Element artistElement = XmlUtil.getFirstElement(docElement, "artist");
-            String sGood = XmlUtil.getDescendentText(artistElement, "goodness");
-            if (sGood != null) {
-                goodness = Float.parseFloat(sGood);
-            }
-            String instaCritic = XmlUtil.getDescendentText(artistElement, "instant_critic");
-            return new Goodness(goodness, instaCritic);
-        } catch (IOException ioe) {
-            throw new EchoNestException(ioe);
-        }
     }
 
 
@@ -457,7 +423,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Retrieves a list of the top hottt artists
      * @param count the number of results to return
      * @return A list of artists, scrored by hotness
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Scored<Artist>> getTopHotttArtists(int count) throws EchoNestException {
         try {
@@ -473,10 +439,10 @@ public class ArtistAPI extends EchoNestCommander {
                 String name = XmlUtil.getDescendentText(item, "name");
                 String id = XmlUtil.getDescendentText(item, "id");
                 String sHotness = XmlUtil.getDescendentText(item, "hotttnesss");
-                double hotness = 1;
+                float hotness = 1;
 
                 if (sHotness != null) {
-                    hotness = Double.parseDouble(sHotness);
+                    hotness = parseFloat("get_top_hottt_artists", sHotness);
                 }
 
                 Artist artist = new Artist(name, id);
@@ -494,7 +460,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param start the starting position
      * @param count the number of artists to return
      * @return a scored list of similar artists
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Scored<Artist>> getSimilarArtists(Artist artist, int start, int count) throws EchoNestException {
         return getSimilarArtists(artist.getId(), start, count);
@@ -506,7 +472,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param start the starting position
      * @param count the number of artists to return
      * @return a scored list of similar artists
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Scored<Artist>> getSimilarArtists(List<Artist> artists, int start, int count) throws EchoNestException {
         String[] ids = new String[artists.size()];
@@ -523,7 +489,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param start the starting position
      * @param count the number of artists to return
      * @return a scored list of similar artists
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Scored<Artist>> getSimilarArtists(String id, int start, int count) throws EchoNestException {
         String[] ids = new String[1];
@@ -538,7 +504,7 @@ public class ArtistAPI extends EchoNestCommander {
      * @param start the starting position
      * @param count the number of artists to return
      * @return a scored list of similar artists
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public List<Scored<Artist>> getSimilarArtists(String[] ids, int start, int count) throws EchoNestException {
         String cmdURL = "get_similar?start=" + start + "&rows=" + count;
@@ -569,12 +535,7 @@ public class ArtistAPI extends EchoNestCommander {
                 String name = XmlUtil.getDescendentText(item, "name");
                 String enid = XmlUtil.getDescendentText(item, "id");
                 String srank = XmlUtil.getDescendentText(item, "rank");
-
-                int rank = 1;
-                if (srank != null) {
-                    rank = Integer.parseInt(srank);
-                }
-
+                int rank = parseInt("get_similar rank", srank);
                 Artist artist = new Artist(name, enid);
                 artists.add(new Scored<Artist>(artist, 1.0 / rank));
             }
@@ -592,7 +553,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Wikipedia article, Amazon list, and iTunes page. 
      * @param artist the artist of interest
      * @return the links for the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public Map<String, String> getUrls(Artist artist) throws EchoNestException {
         return getUrls(artist.getId());
@@ -603,7 +564,7 @@ public class ArtistAPI extends EchoNestCommander {
      * Wikipedia article, Amazon list, and iTunes page.
      * @param id the id of the artist of interest
      * @return the links for the artist
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public Map<String, String> getUrls(String id) throws EchoNestException {
         try {
@@ -628,6 +589,11 @@ public class ArtistAPI extends EchoNestCommander {
     }
 
 
+    /**
+     *
+     * @param args
+     * @throws java.io.IOException
+     */
     public static void main(String[] args) throws IOException {
         try {
             ArtistAPI echoNest = new ArtistAPI();

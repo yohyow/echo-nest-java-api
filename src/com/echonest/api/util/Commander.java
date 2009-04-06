@@ -125,7 +125,7 @@ public class Commander {
 
     /**
      * Gets the maximum number of retries
-     * @return
+     * @return the max number of retreis
      */
     public int getRetries() {
         return tryCount - 1;
@@ -140,8 +140,8 @@ public class Commander {
 
     /**
      * Encode a parameter 
-     * @param name
-     * @return
+     * @param name the name to be encoded
+     * @return an encoded form of the name
      */
     public String encode(String name) {
         try {
@@ -420,7 +420,7 @@ public class Commander {
 
                 dos.writeBytes("Content-Disposition: form-data; name=\"file\";" + " filename=\"" + file.getName() + "\"" );
                 dos.writeBytes(NEWLINE);
-                dos.writeBytes("Content-Type: application/octet-stream" + "\"" );
+                dos.writeBytes("Content-Type: application/octet-stream");
                 dos.writeBytes(NEWLINE);
                 dos.writeBytes(NEWLINE);
 

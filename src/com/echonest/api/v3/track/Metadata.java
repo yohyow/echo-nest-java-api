@@ -6,8 +6,7 @@
 package com.echonest.api.v3.track;
 
 /**
- *
- * @author plamere
+ * Represents a track ID3 metadata
  */
 public class Metadata {
     private String artist = "";
@@ -18,6 +17,10 @@ public class Metadata {
     private int samplerate = 0;
     private int bitrate = 0;
 
+    /**
+     * Gets the artist name
+     * @return the artist name
+     */
     public String getArtist() {
         return artist;
     }
@@ -26,6 +29,10 @@ public class Metadata {
         this.artist = artist;
     }
 
+    /**
+     * Gets the bitrate
+     * @return the bitrate
+     */
     public int getBitrate() {
         return bitrate;
     }
@@ -34,6 +41,10 @@ public class Metadata {
         this.bitrate = bitrate;
     }
 
+    /**
+     * Gets the track duration
+     * @return the duration in seconds
+     */
     public float getDuration() {
         return duration;
     }
@@ -42,6 +53,10 @@ public class Metadata {
         this.duration = duration;
     }
 
+    /**
+     * Gets the genre
+     * @return the genre
+     */
     public String getGenre() {
         return genre;
     }
@@ -50,6 +65,10 @@ public class Metadata {
         this.genre = genre;
     }
 
+    /**
+     * Gets the release (album) name
+     * @return the release name
+     */
     public String getRelease() {
         return release;
     }
@@ -58,6 +77,10 @@ public class Metadata {
         this.release = release;
     }
 
+    /**
+     * Gets the sample rate
+     * @return the sample rate
+     */
     public int getSamplerate() {
         return samplerate;
     }
@@ -66,6 +89,10 @@ public class Metadata {
         this.samplerate = samplerate;
     }
 
+    /**
+     * Gets the track title 
+     * @return the track title
+     */
     public String getTitle() {
         return title;
     }

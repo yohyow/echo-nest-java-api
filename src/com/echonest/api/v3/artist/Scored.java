@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * Represents a generic item with a score
  * 
- * @param T the type of the scored item.
+ * @param <T>  he type of the scored item.
  */
 
 public class Scored<T> implements Serializable {

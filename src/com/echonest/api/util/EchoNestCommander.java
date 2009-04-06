@@ -5,7 +5,6 @@
 package com.echonest.api.util;
 
 import com.echonest.api.v3.artist.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -30,6 +29,7 @@ public class EchoNestCommander {
     private StatsManager sm = new StatsManager();
     private ExpiringCache<Document> cache;
     private String key;
+    private boolean ignoreParsingErrors = true;
 
     /**
      * Creates an instance of the EchoNest class using an API key specified in the 
@@ -84,6 +84,23 @@ public class EchoNestCommander {
     protected String getKey() {
         return key;
     }
+
+    /**
+     * Determines if we are ignoring parse errors
+     * @return true if we are ignoring parse errors
+     */
+    public boolean isIgnoreParsingErrors() {
+        return ignoreParsingErrors;
+    }
+
+    /**
+     * Sets whether or not parsing errors are ignroed
+     * @param ignoreParsingErrors true (the default) if we should ignore parse errors
+     */
+    public void setIgnoreParsingErrors(boolean ignoreParsingErrors) {
+        this.ignoreParsingErrors = ignoreParsingErrors;
+    }
+
 
     /**
      * Sets the maximum time that values will be cached by this library. To disable
@@ -217,5 +234,46 @@ public class EchoNestCommander {
         } catch (UnsupportedEncodingException ex) {
             return parameter;
         }
+    }
+
+    protected float parseFloat(String srcName, String sval) {
+        if (sval == null) {
+            System.err.println("Null " + srcName + " float value");
+            return 0f;
+        } else {
+            try {
+                return Float.parseFloat(sval);
+            } catch (NumberFormatException nfe) {
+                System.err.println("Trouble parsing " + srcName + " as float:" + sval);
+                if (!ignoreParsingErrors) {
+                    throw new NumberFormatException("while parsing " + srcName + " " + sval);
+                }
+                return 0f;
+            }
+        }
+    }
+
+    protected int parseInt(String srcName, String sval) {
+        if (sval == null) {
+            System.err.println("Null " + srcName + " int value");
+            if (!ignoreParsingErrors) {
+                throw new NullPointerException("while parsing " + srcName);
+            }
+            return 0;
+        } else {
+            try {
+                return Integer.parseInt(sval);
+            } catch (NumberFormatException nfe) {
+                System.err.println("Trouble parsing " + srcName + " as int:" + sval);
+                if (!ignoreParsingErrors) {
+                    throw new NumberFormatException("while parsing " + srcName + " " + sval);
+                }
+                return 0;
+            }
+        }
+    }
+
+    protected void setTimeout(int timeout) {
+        commander.setTimeout(timeout);
     }
 }

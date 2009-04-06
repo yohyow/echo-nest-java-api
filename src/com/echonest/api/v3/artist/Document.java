@@ -6,10 +6,13 @@ package com.echonest.api.v3.artist;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Element;
@@ -104,5 +107,15 @@ public class Document {
                 }
             }
         }
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        List<String> keys = new ArrayList<String>(values.keySet());
+        Collections.sort(keys);
+        for (String key : keys) {
+            sb.append(key + ": " + values.get(key) + "\n");
+        }
+        return sb.toString();
     }
 }
