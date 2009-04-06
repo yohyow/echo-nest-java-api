@@ -35,9 +35,15 @@ with the API:
   }
 
 
+See the 'examples' package for more code samples
 
 Revision History
 ----------------
 
+Version .2  - April 6, 2009
+    - added support for the track-level methods
+    - improved the documentation
+    - added some examples
+    
 Version .1  - March 27, 2009
     Initial Release

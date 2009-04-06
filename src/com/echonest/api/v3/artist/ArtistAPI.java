@@ -66,7 +66,7 @@ public class ArtistAPI extends EchoNestCommander {
             String name = XmlUtil.getDescendentText(artist, "name");
 
             if (!id.equals(newid)) {
-                throw new EchoNestException(EchoNestException.ERR_BAD_ID, "mismatch ID");
+                throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY, "mismatch ID");
             }
             return new Artist(name, newid);
         } catch (IOException ioe) {
