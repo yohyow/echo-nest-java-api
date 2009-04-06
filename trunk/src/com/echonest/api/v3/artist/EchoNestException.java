@@ -11,14 +11,25 @@ package com.echonest.api.v3.artist;
  */
 
 public class EchoNestException extends Exception {
+
+    /** success */
+     public final static int SUCCESS = 0;
+    /** Missing/Invalid API Key */
+     public final static int ERR_MISSING_OR_INVALID_API_KEY = 1;
+    /**  API Key is not allowed to call this method */
+     public final static int ERR_ACCESS_DENIED = 2;
+    /** Rate limit exceeded */
+     public final static int ERR_RATE_LIMIT_EXCEEDED = 3;
+    /** missing parameter */
+     public final static int ERR_MISSING_PARAMETER = 4;
     /** access to an invalid field */
-     public final static int ERR_INVALID_FIELDS = -2;
-     /** a bad ID */
-     public final static int ERR_BAD_ID = -3;
+     public final static int ERR_INVALID_PARAMETER = 5;
+
+     // some synthetic error codes
+     /** the client API expected something different from the server */
+     public final static int CLIENT_SERVER_INCONSISTENCY = -2;
      /** no api key was given */
-     public final static int ERR_NO_KEY = -3;
-     /** MD5s mismatch */
-     public final static int ERR_BAD_MD5 = -4;
+     public final static int ERR_NO_KEY = -4;
 
      private int code = -1;
      private String message;

@@ -102,7 +102,8 @@ public class Document {
 
                 for (String s : found) {
                     if (!validSet.contains(s)) {
-                        throw new EchoNestException(EchoNestException.ERR_INVALID_FIELDS, "Extra field " + s);
+                        throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY,
+                                "Extra field " + s);
                     }
                 }
             }

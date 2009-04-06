@@ -47,7 +47,7 @@ public class EchoNestCommander {
      * @throws com.echonest.api.v3.EchoNestException
      */
     public EchoNestCommander(String key, String prefix) throws EchoNestException {
-        if (key == null) {
+        if (key == null || key.length() == 0) {
             System.err.println("No API Key is defined. Get a key from http://developer.echonest.com");
             throw new EchoNestException(EchoNestException.ERR_NO_KEY, "No API key defined");
         }

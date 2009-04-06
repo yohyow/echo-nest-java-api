@@ -85,6 +85,9 @@ public class TrackAPI extends EchoNestCommander {
             String trackID = trackElement.getAttribute("id");
             String md5 = trackElement.getAttribute("md5");
             boolean ready = trackElement.getAttribute("md5").equals("true");
+            if (!ready) {
+                waitForID(trackID);
+            }
             return trackID;
         } catch (IOException ioe) {
             throw new EchoNestException(ioe);
@@ -119,10 +122,13 @@ public class TrackAPI extends EchoNestCommander {
                 String trackID = trackElement.getAttribute("id");
                 String md5 = trackElement.getAttribute("md5");
                 if (!fileMD5.equals(md5)) {
-                    throw new EchoNestException(EchoNestException.ERR_BAD_MD5,
+                    throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY,
                             "MD5 of analysis mismatches MD5 of file, found " + md5 + " expected " + fileMD5);
                 }
                 boolean ready = trackElement.getAttribute("md5").equals("true");
+                if (!ready) {
+                    waitForID(trackID);
+                }
                 return trackID;
             }
             return fileMD5;
@@ -149,7 +155,6 @@ public class TrackAPI extends EchoNestCommander {
      */
     public float getDuration(String idOrMd5) throws EchoNestException {
         try {
-            float duration = 0f;
             String cmdURL = "get_duration?" + getIDParam(idOrMd5);
             Document doc = sendCommand("get_duration", cmdURL);
             Element docElement = doc.getDocumentElement();
@@ -542,6 +547,10 @@ public class TrackAPI extends EchoNestCommander {
      * @throws com.echonest.api.v3.artist.EchoNestException
      */
     public AnalysisStatus getAnalysisStatus(String idOrMd5) throws EchoNestException {
+
+        // there is a race condition on the server side - when wecan get an ID
+        // back from a track upload call, there's a brief period of time where
+        // it is not a valid id ...  so we try to accomodate this here.
         try {
             getDuration(idOrMd5);
             return AnalysisStatus.COMPLETE;
@@ -590,9 +599,29 @@ public class TrackAPI extends EchoNestCommander {
         long elapsed = 0;
         AnalysisStatus status = AnalysisStatus.UNKNOWN;
         do {
+
             status = getAnalysisStatus(idOrMD5);
             elapsed = System.currentTimeMillis() - startTime;
         } while (status == AnalysisStatus.PENDING && elapsed < timeoutMillis);
         return status;
+    }
+
+    /**
+     * When we upload a track, we are returned an ID. However, this ID may not
+     * be a valid ID for a 'little while'. This method polls the Echo Nest with an
+     * ID until the ID is valid. Should only be called with an ID returned from trackUpload
+     * @param id
+     */
+    private void waitForID(String id) {
+        while (true) {
+            try {
+                getAnalysisStatus(id);
+                return;
+            } catch (EchoNestException e) {
+                if (e.getCode() != EchoNestException.ERR_INVALID_PARAMETER) {
+                    return;
+                }
+            }
+        }
     }
 }
