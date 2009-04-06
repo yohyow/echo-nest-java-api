@@ -17,7 +17,6 @@ import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
 import com.echonest.api.v3.artist.Video;
 import com.echonest.api.v3.track.TrackAPI;
-import com.echonest.api.v3.track.TrackStatus;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -147,33 +146,6 @@ public class EchonestDevShell {
                 return "finds similar artists";
             }
         });
-
-        /**
-        shell.add("uploadTrack", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length < 2) {
-                    return "Usage: uploadTrack url | file";
-                } else {
-                    String path = args[1];
-                    if (path.startsWith("http:")) {
-                        String id = artistAPI.uploadTrack(new URL(path), false);
-                        System.out.println("ID is: " + id);
-                    } else {
-                        String id = artistAPI.uploadTrack(new File(path), false);
-                        System.out.println("ID is: " + id);
-                    }
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "uploads a track";
-            }
-        });
-         **/
-
-
 
         shell.add("get_blogs", new ShellCommand() {
 
@@ -376,22 +348,6 @@ public class EchonestDevShell {
             }
         });
 
-        shell.add("get_goodness", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                Artist artist = getArtist(ci.mash(args, 1));
-                if (artist != null) {
-                    System.out.println("Goodness for " + artist.getName() + " " + artistAPI.getGoodness(artist));
-                } else {
-                    System.out.println("Can't find artist");
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "gets goodness for an artist";
-            }
-        });
 
         shell.add("top_hot", new ShellCommand() {
 
@@ -412,6 +368,7 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 artistAPI.showStats();
+                trackAPI.showStats();
                 return "";
             }
 
@@ -425,6 +382,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     artistAPI.setTrace(args[1].equals("true"));
+                    trackAPI.setTrace(args[1].equals("true"));
                 } else {
                     System.out.println("Usage: trace true|false");
                 }
@@ -436,11 +394,29 @@ public class EchonestDevShell {
             }
         });
 
+        shell.add("ignoreParseErrors", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    artistAPI.setIgnoreParsingErrors(args[1].equals("true"));
+                    trackAPI.setIgnoreParsingErrors(args[1].equals("true"));
+                } else {
+                    System.out.println("Usage: ignoreParseErrors true|false");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "enables/disables ignoring parse errors";
+            }
+        });
+
         shell.add("saveCache", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
-                    artistAPI.saveCache(args[1]);
+                    artistAPI.saveCache(args[1] + ".artist.cache");
+                    trackAPI.saveCache( args[1] + ".track.cache");
                 } else {
                     System.out.println("Usage: saveCache filename");
                 }
@@ -456,7 +432,8 @@ public class EchonestDevShell {
 
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
-                    artistAPI.loadCache(args[1]);
+                    artistAPI.loadCache(args[1] + ".artist.cache");
+                    artistAPI.loadCache(args[1] + ".track.cache");
                 } else {
                     System.out.println("Usage: loadCache filename");
                 }
@@ -474,6 +451,7 @@ public class EchonestDevShell {
                 if (args.length == 2) {
                     long cacheTime = Integer.parseInt(args[1]) * 1000L;
                     artistAPI.setMaxCacheTime(cacheTime);
+                    trackAPI.setMaxCacheTime(cacheTime);
                 } else {
                     System.out.println("Usage: setMaxCacheTime secs");
                 }
@@ -506,12 +484,11 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length >= 2) {
                     String arg = ci.mash(args, 1);
-                    TrackStatus ts = null;
                     String id;
                     if (arg.startsWith("http:")) {
-                        id = trackAPI.uploadTrack(new URL(arg));
+                        id = trackAPI.uploadTrack(new URL(arg), false);
                     } else {
-                        id = trackAPI.uploadTrack(new File(arg));
+                        id = trackAPI.uploadTrack(new File(arg), false);
                     }
                     System.out.println("ID: " + id);
                 } else {
@@ -536,7 +513,7 @@ public class EchonestDevShell {
                         for (File f : files) {
                             if (f.getAbsolutePath().toLowerCase().endsWith("mp3")) {
                                 System.out.println("Uploading " + f);
-                                String id = trackAPI.uploadTrack(f);
+                                String id = trackAPI.uploadTrack(f, false);
                                 System.out.println("   done. ID is " + id);
                             }
                         }
@@ -552,6 +529,36 @@ public class EchonestDevShell {
 
             public String getHelp() {
                 return "uploads a directory of tracks";
+            }
+        });
+
+        shell.add("trackShowDir", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length >= 2) {
+                    String arg = Shell.mash(args, 1);
+                    File dir = new File(arg);
+                    if (dir.isDirectory()) {
+                        File[] files = dir.listFiles();
+                        for (File f : files) {
+                            if (f.getAbsolutePath().toLowerCase().endsWith("mp3")) {
+                                String md5 = trackAPI.getMD5(f);
+                                if (trackAPI.isKnownTrack(md5)) {
+                                    showAll(md5);
+                                }
+                            }
+                        }
+                    } else {
+                        System.out.println("Usage: " + args[0] + " dir");
+                    }
+                } else {
+                    System.out.println("Usage: trackUploadDir dir");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "Shows the info for a directory of previously analyzed tracks";
             }
         });
 
@@ -714,7 +721,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     String arg = args[1];
-                    show(trackAPI.getBeats(arg));
+                    show("beats", trackAPI.getBeats(arg));
                 } else {
                     System.out.println("Usage: " + args[0] + " id|md5");
                 }
@@ -731,7 +738,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     String arg = args[1];
-                    show(trackAPI.getBars(arg));
+                    show("bars", trackAPI.getBars(arg));
                 } else {
                     System.out.println("Usage: " + args[0] + " id|md5");
                 }
@@ -748,7 +755,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     String arg = args[1];
-                    show(trackAPI.getTatums(arg));
+                    show("tatums", trackAPI.getTatums(arg));
                 } else {
                     System.out.println("Usage: " + args[0] + " id|md5");
                 }
@@ -765,7 +772,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     String arg = args[1];
-                    show(trackAPI.getSections(arg));
+                    show("sections", trackAPI.getSections(arg));
                 } else {
                     System.out.println("Usage: " + args[0] + " id|md5");
                 }
@@ -776,6 +783,41 @@ public class EchonestDevShell {
                 return "gets the tatums of a track";
             }
         });
+
+        shell.add("trackSegments", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    String arg = args[1];
+                    show("segments", trackAPI.getSegments(arg));
+                } else {
+                    System.out.println("Usage: " + args[0] + " id|md5");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets the segments of a track";
+            }
+        });
+
+        shell.add("trackShowAll", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    String arg = args[1];
+                    showAll(arg);
+                } else {
+                    System.out.println("Usage: " + args[0] + " id|md5");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "shows everything about a track";
+            }
+        });
+
 
 
         shell.add("trackWait", new ShellCommand() {
@@ -794,6 +836,24 @@ public class EchonestDevShell {
                 return "waits for an analysis to be complete";
             }
         });
+
+    }
+
+     private void showAll(String idOrMd5) throws EchoNestException {
+        System.out.println("Duration: " + trackAPI.getDuration(idOrMd5));
+        System.out.println("FadeIn End: " + trackAPI.getEndOfFadeIn(idOrMd5));
+        System.out.println("FadeOut Start: " + trackAPI.getStartOfFadeOut(idOrMd5));
+        System.out.println("Key: " + trackAPI.getKey(idOrMd5));
+        System.out.println("Loudness: " + trackAPI.getOverallLoudness(idOrMd5));
+        System.out.println("Metadata: " + trackAPI.getMetadata(idOrMd5));
+        System.out.println("Mode: " + trackAPI.getMode(idOrMd5));
+        System.out.println("Tempo: " + trackAPI.getTempo(idOrMd5));
+        System.out.println("Time Signature: " + trackAPI.getTimeSignature(idOrMd5));
+        show("sections", trackAPI.getSections(idOrMd5));
+        show("bars", trackAPI.getBars(idOrMd5));
+        show("beats", trackAPI.getBeats(idOrMd5));
+        show("tatums", trackAPI.getTatums(idOrMd5));
+        show("segments", trackAPI.getSegments(idOrMd5));
     }
 
     private Artist getArtist(String name) throws EchoNestException {
@@ -807,11 +867,13 @@ public class EchonestDevShell {
                     artist = artists.get(0);
                     artistCache.put(name, artist);
                 }
+
             }
             if (artist != null) {
                 artistCache.put(artist.getId(), artist);
                 artistCache.put(artist.getName(), artist);
             }
+
         }
         return artist;
     }
@@ -823,6 +885,7 @@ public class EchonestDevShell {
         } catch (EchoNestException e) {
             System.err.println("Can't connect to the echonest");
         }
+
     }
     private final static int MAX_NEWS = 15;
     private final static int MAX_REVIEWS = 15;
@@ -845,6 +908,7 @@ public class EchonestDevShell {
             } else {
                 System.err.println("Bad line " + line);
             }
+
         }
         System.out.println("</body>");
         System.out.println("</html>");
@@ -858,6 +922,7 @@ public class EchonestDevShell {
                 System.out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/> ");
                 System.out.println("<body>");
             }
+
             System.out.println("<div class=\"artist\">");
             System.out.println("<h1>" + artist.getName() + "</h1>");
             artistBlogs(artist);
@@ -868,9 +933,11 @@ public class EchonestDevShell {
                 System.out.println("</body>");
                 System.out.println("</html>");
             }
+
         } else {
             System.err.println("Can't find artist for " + id);
         }
+
     }
 
     private void artistNews(Artist artist) throws EchoNestException {
@@ -878,9 +945,10 @@ public class EchonestDevShell {
         DocumentList<News> newsList = artistAPI.getNews(artist.getId(), 0, MAX_NEWS);
         for (News news : newsList.getDocuments()) {
             System.out.println("<h3>" + mklink(news.getURL(), news.getName()) + "</h3>");
-            System.out.println("From: " + news.getURL() +"<p>");
+            System.out.println("From: " + news.getURL() + "<p>");
             System.out.println("<div class=\"summary\">" + detag(news.getSummary()) + "</div>");
         }
+
     }
 
     private void artistBlogs(Artist artist) throws EchoNestException {
@@ -888,9 +956,10 @@ public class EchonestDevShell {
         DocumentList<Blog> blogs = artistAPI.getBlogs(artist.getId(), 0, MAX_NEWS);
         for (Blog blog : blogs.getDocuments()) {
             System.out.println("<h3>" + mklink(blog.getURL(), blog.getName()) + "</h3>");
-            System.out.println("From: " + blog.getURL() +"<p>");
+            System.out.println("From: " + blog.getURL() + "<p>");
             System.out.println("<div class=\"summary\">" + detag(blog.getSummary()) + "</div>");
         }
+
     }
 
     private void artistReviews(Artist artist) throws EchoNestException {
@@ -898,9 +967,10 @@ public class EchonestDevShell {
         DocumentList<Review> reviews = artistAPI.getReviews(artist.getId(), 0, MAX_NEWS);
         for (Review review : reviews.getDocuments()) {
             System.out.println("<h3>" + mklink(review.getURL(), review.getName()) + "</h3>");
-            System.out.println("From: " + review.getURL() +"<p>");
+            System.out.println("From: " + review.getURL() + "<p>");
             System.out.println("<div class=\"summary\">" + detag(review.getSummary()) + "</div>");
         }
+
     }
 
     private String mklink(String url, String text) {
@@ -911,22 +981,26 @@ public class EchonestDevShell {
         } else {
             return "";
         }
+
     }
 
-    public static String detag(String s) {
+    public static String detag(
+            String s) {
         if (s != null) {
             return s.replaceAll("\\<.*?\\>", "");
         } else {
             return "";
         }
+
     }
 
-    private void show(List<?> list) {
+    private void show(String title, List<?> list) {
+        System.out.println(title);
         for (Object o : list) {
             System.out.println("  " + o);
         }
 
-        System.out.println("\nTotal elements: " + list.size());
+        System.out.println("Total elements: " + list.size());
+        System.out.println();
     }
-
 }

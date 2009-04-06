@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Represents a list of documents
+ * @param <T> the type of document
  * @author plamere
  */
 public class DocumentList<T extends Document> {
@@ -25,6 +26,9 @@ public class DocumentList<T extends Document> {
         documents = new ArrayList<T>();
     }
 
+    /**
+     * Dumps the document list for debugging purposes
+     */
     public void dump() {
         System.out.printf("Total: %d  Start: %d  Count: %d\n", total, start, count);
         for (T t : documents) {

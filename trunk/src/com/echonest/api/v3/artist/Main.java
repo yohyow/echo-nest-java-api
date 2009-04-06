@@ -12,6 +12,10 @@ import java.util.List;
  */
 public class Main {
 
+    /**
+     * The main entry point
+     * @param args optional - contains the artist name
+     */
     public static void main(String[] args) {
         try {
             ArtistAPI echoNest = new ArtistAPI();

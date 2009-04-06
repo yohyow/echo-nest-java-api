@@ -1,0 +1,1 @@
+java -DECHO_NEST_API_KEY=$MY_ECHO_NEST_KEY -cp dist/EchoNestAPI.jar examples.FindSimilarArtists "$*"

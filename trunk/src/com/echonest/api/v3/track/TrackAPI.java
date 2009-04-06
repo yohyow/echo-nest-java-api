@@ -20,6 +20,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
+ * A client side API for the Echo Nest developer track-level analysis API.  The Echo Nest developer
+ * API requires an API key. You can obtain a key at: http://developer.echonest.com/
+ *
+ * This client supports cacheing of the return results. The cache is enabled by
+ * default.
  *
  * @author plamere
  */
@@ -28,14 +33,21 @@ public class TrackAPI extends EchoNestCommander {
     /** The status of an analysis */
     public enum AnalysisStatus {
 
-        UNKNOWN, PENDING, COMPLETE, ERROR
+        /** track is unknown */
+        UNKNOWN,
+        /** track analysis is underway */
+        PENDING,
+        /** track analysis is complete */
+        COMPLETE,
+        /** track analysis failed */
+        ERROR
     };
 
     /**
      * Creates an instance of the TrackAPI class using an API key specified in the
      * the property ECHO_NEST_API_KEY
      *
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException
      */
     public TrackAPI() throws EchoNestException {
         this(System.getProperty("ECHO_NEST_API_KEY"));
@@ -44,20 +56,29 @@ public class TrackAPI extends EchoNestCommander {
     /**
      * Creates an instance of the TrackAPI class
      * @param key the TrackAPI key (available at http://developer.echonest.com/ )
-     * @throws com.echonest.api.v3.EchoNestException
+     * @throws EchoNestException 
      */
     public TrackAPI(String key) throws EchoNestException {
         super(key, null);
     }
 
-    public String uploadTrack(URL trackUrl) throws EchoNestException {
+    /**
+     * Upload a track
+     * @param trackUrl the url of the track
+     * @param wait if true, wait for the analysis
+     * @return the ID of the track
+     * @throws com.echonest.api.v3.artist.EchoNestException
+     */
+    public String uploadTrack(URL trackUrl, boolean wait) throws EchoNestException {
         try {
-            boolean wait = false;
             Map<String, Object> params = new HashMap<String, Object>();
             params.put("wait", (wait ? "Y" : "N"));
             params.put("version", "3");
             params.put("api_key", getKey());
             params.put("url", trackUrl.toExternalForm());
+            if (wait) {
+                setTimeout(180 * 1000);
+            }
             Document doc = postCommand("upload_url", "upload", params);
             Element docElement = doc.getDocumentElement();
             Element trackElement = (Element) XmlUtil.getDescendent(docElement, "track");
@@ -73,20 +94,25 @@ public class TrackAPI extends EchoNestCommander {
     /**
      * Uploads the audio to the echonest for analysis
      * @param trackFile the file to upload
+     * @param wait if true, wait for the analysis
      * @return the ID or the MD5 of the track. The id is returned if the track 
      *    was uploaded, the MD5 is returned if the track was already uploaded
      * @throws com.echonest.api.v3.artist.EchoNestException
      */
-    public String uploadTrack(File trackFile) throws EchoNestException {
+    public String uploadTrack(File trackFile, boolean wait) throws EchoNestException {
         try {
             String fileMD5 = Utilities.md5(trackFile);
             if (!isKnownTrack(fileMD5)) {
-                boolean wait = false;
                 Map<String, Object> params = new HashMap<String, Object>();
                 params.put("wait", (wait ? "Y" : "N"));
                 params.put("version", "3");
                 params.put("api_key", getKey());
                 params.put("file", trackFile);
+
+                if (wait) {
+                    setTimeout(180 * 1000);
+                }
+
                 Document doc = postCommand("upload_file", "upload", params);
                 Element docElement = doc.getDocumentElement();
                 Element trackElement = (Element) XmlUtil.getDescendent(docElement, "track");
@@ -106,6 +132,16 @@ public class TrackAPI extends EchoNestCommander {
     }
 
     /**
+     * Convenience method, returns the MD5 hash of a file
+     * @param file the file of interest
+     * @return the MD5 hash of the file
+     * @throws IOException
+     */
+    public String getMD5(File file) throws IOException {
+        return Utilities.md5(file);
+    }
+
+    /**
      * Gets the duration of a previously analyzed track
      * @param idOrMd5 the ID or the MD5 of the track
      * @return the duration of the track in seconds
@@ -119,10 +155,7 @@ public class TrackAPI extends EchoNestCommander {
             Element docElement = doc.getDocumentElement();
             Element analysisElement = XmlUtil.getFirstElement(docElement, "analysis");
             String sDur = XmlUtil.getDescendentText(analysisElement, "duration");
-            if (sDur != null) {
-                duration = Float.parseFloat(sDur);
-            }
-            return duration;
+            return parseFloat("duration", sDur);
         } catch (IOException ioe) {
             throw new EchoNestException(ioe);
         }
@@ -348,29 +381,33 @@ public class TrackAPI extends EchoNestCommander {
             Element docElement = doc.getDocumentElement();
             Element analysisElement = XmlUtil.getFirstElement(docElement, "analysis");
             List<Segment> results = new ArrayList<Segment>();
-            NodeList nodes = analysisElement.getElementsByTagName("segments");
+            NodeList nodes = analysisElement.getElementsByTagName("segment");
             for (int i = 0; i < nodes.getLength(); i++) {
                 Segment segment = new Segment();
 
                 Element segmentElement = (Element) nodes.item(i);
-                float startTime = Float.parseFloat(segmentElement.getAttribute("start"));
-                float duration = Float.parseFloat(segmentElement.getAttribute("duration"));
+                float startTime = parseFloat("startTime", segmentElement.getAttribute("start"));
+                float duration = parseFloat("duration", segmentElement.getAttribute("duration"));
 
                 segment.setDuration(duration);
                 segment.setStart(startTime);
 
                 {
                     // get the loudness info
-                    NodeList loudnessNodes = segmentElement.getElementsByTagName("dB");
+                    Element loudnessElement = XmlUtil.getFirstElement(segmentElement, "loudness");
+                    NodeList loudnessNodes = loudnessElement.getElementsByTagName("dB");
                     for (int j = 0; j < loudnessNodes.getLength(); j++) {
-                        Element dbElement = (Element) nodes.item(j);
-                        float db = Float.parseFloat(dbElement.getTextContent());
+                        Element dbElement = (Element) loudnessNodes.item(j);
+                        String dbText = dbElement.getTextContent();
+                        float db = parseFloat("db", dbElement.getTextContent());
+                        float time = parseFloat("time", dbElement.getAttribute("time"));
                         if ("max".equalsIgnoreCase(dbElement.getAttribute("type"))) {
-                            float maxTime = Float.parseFloat(dbElement.getAttribute("time"));
-                            segment.setMaxLoudnessTimeOffset(maxTime);
+                            segment.setMaxLoudnessTimeOffset(time);
                             segment.setMaxLoudness(db);
-                        } else {
+                        } else if (time == 0f) {
                             segment.setStartLoudness(db);
+                        } else {
+                            segment.setEndLoudness(db);
                         }
                     }
                 }
@@ -380,8 +417,8 @@ public class TrackAPI extends EchoNestCommander {
                     NodeList pitchNodes = segmentElement.getElementsByTagName("pitch");
                     float[] pitch = new float[pitchNodes.getLength()];
                     for (int j = 0; j < pitchNodes.getLength(); j++) {
-                        Element pitchElement = (Element) nodes.item(j);
-                        pitch[j] = Float.parseFloat(pitchElement.getTextContent());
+                        Element pitchElement = (Element) pitchNodes.item(j);
+                        pitch[j] = parseFloat("pitch", pitchElement.getTextContent());
                     }
                     segment.setPitches(pitch);
                 }
@@ -391,8 +428,8 @@ public class TrackAPI extends EchoNestCommander {
                     NodeList coeffNodes = segmentElement.getElementsByTagName("coeff");
                     float[] coeff = new float[coeffNodes.getLength()];
                     for (int j = 0; j < coeffNodes.getLength(); j++) {
-                        Element coeffElement = (Element) nodes.item(j);
-                        coeff[j] = Float.parseFloat(coeffElement.getTextContent());
+                        Element coeffElement = (Element) coeffNodes.item(j);
+                        coeff[j] = parseFloat("coeff", coeffElement.getTextContent());
                     }
                     segment.setTimbre(coeff);
                 }
@@ -421,8 +458,8 @@ public class TrackAPI extends EchoNestCommander {
             NodeList nodes = analysisElement.getElementsByTagName("section");
             for (int i = 0; i < nodes.getLength(); i++) {
                 Element section = (Element) nodes.item(i);
-                float start = Float.parseFloat(section.getAttribute("start"));
-                float duration = Float.parseFloat(section.getAttribute("duration"));
+                float start = parseFloat("start", section.getAttribute("start"));
+                float duration = parseFloat("section duration", section.getAttribute("duration"));
                 results.add(new Section(start, duration));
             }
             return results;
@@ -455,7 +492,8 @@ public class TrackAPI extends EchoNestCommander {
             Element subElement = XmlUtil.getFirstElement(element, subElementName);
             String sconf = subElement.getAttribute("confidence");
             String sval = subElement.getTextContent();
-            return new IntWithConfidence(Float.parseFloat(sconf), Integer.parseInt(sval));
+            return new IntWithConfidence(parseFloat(subElementName + " confidence", sconf),
+                    parseInt(subElementName, sval));
         } catch (NumberFormatException e) {
             throw new EchoNestException(e);
         } catch (IOException e) {
@@ -469,7 +507,8 @@ public class TrackAPI extends EchoNestCommander {
             Element subElement = XmlUtil.getFirstElement(element, subElementName);
             String sconf = subElement.getAttribute("confidence");
             String sval = subElement.getTextContent();
-            return new FloatWithConfidence(Float.parseFloat(sconf), Float.parseFloat(sval));
+            return new FloatWithConfidence(parseFloat(subElement + " confidence", sconf),
+                    parseFloat(subElementName, sval));
         } catch (NumberFormatException e) {
             throw new EchoNestException(e);
         } catch (IOException e) {
@@ -481,7 +520,8 @@ public class TrackAPI extends EchoNestCommander {
         try {
             String sconf = element.getAttribute("confidence");
             String sval = element.getTextContent();
-            return new FloatWithConfidence(Float.parseFloat(sconf), Float.parseFloat(sval));
+            return new FloatWithConfidence(parseFloat(element.getTagName() + " confidence", sconf),
+                    parseFloat(element.getTagName(), sval));
         } catch (NumberFormatException e) {
             throw new EchoNestException(e);
         }
@@ -497,7 +537,7 @@ public class TrackAPI extends EchoNestCommander {
 
     /**
      * Gets the analysis status for the given ID
-     * @param iOrMd5d the analysis id or md5
+     * @param idOrMd5 the analysis id or md5
      * @return the status of the analysis
      * @throws com.echonest.api.v3.artist.EchoNestException
      */
@@ -516,9 +556,8 @@ public class TrackAPI extends EchoNestCommander {
 
     /**
      * Determines whether or not the track is known by the echo nest
-     * @param iOrMd5d the analysis id or md5
+     * @param idOrMd5 the analysis id or md5
      * @return true if the track is known
-     * @throws com.echonest.api.v3.artist.EchoNestException
      */
     public boolean isKnownTrack(String idOrMd5) {
         try {
@@ -530,8 +569,18 @@ public class TrackAPI extends EchoNestCommander {
     }
 
     /**
+     * Determines whether or not the track is known by the echo nest
+     * @param file the file to test
+     * @return true if the track is known
+     * @throws IOException
+     */
+    public boolean isKnownTrack(File file) throws IOException {
+        return isKnownTrack(getMD5(file));
+    }
+
+    /**
      * Wait for an analysis to finish
-     * @param id the id of the track being analyzed (as returned from uploadTrack)
+     * @param idOrMD5 the id of the track being analyzed (as returned from uploadTrack)
      * @param timeoutMillis maximum milliseconds to wait for the analysis
      * @return the status
      * @throws com.echonest.api.v3.artist.EchoNestException
