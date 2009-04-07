@@ -5,7 +5,7 @@
 
 package examples;
 
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import com.echonest.api.v3.track.FloatWithConfidence;
 import com.echonest.api.v3.track.Metadata;
 import com.echonest.api.v3.track.TrackAPI;

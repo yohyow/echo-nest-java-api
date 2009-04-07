@@ -4,7 +4,8 @@
  */
 package com.echonest.api.v3.artist;
 
-import com.echonest.api.util.EchoNestCommander;
+import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.EchoNestCommander;
 import com.echonest.api.util.XmlUtil;
 import java.io.IOException;
 import java.util.ArrayList;

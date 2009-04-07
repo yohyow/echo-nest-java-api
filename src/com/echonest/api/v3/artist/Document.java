@@ -4,6 +4,7 @@
  */
 package com.echonest.api.v3.artist;
 
+import com.echonest.api.v3.EchoNestException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

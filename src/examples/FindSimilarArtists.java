@@ -7,7 +7,7 @@ package examples;
 import com.echonest.api.v3.artist.Artist;
 import com.echonest.api.v3.artist.ArtistAPI;
 import com.echonest.api.v3.artist.Audio;
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import com.echonest.api.v3.artist.Scored;
 import java.util.List;
 

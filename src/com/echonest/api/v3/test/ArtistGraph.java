@@ -7,7 +7,7 @@ package com.echonest.api.v3.test;
 import com.echonest.api.v3.artist.Scored;
 import com.echonest.api.v3.artist.Artist;
 import com.echonest.api.v3.artist.ArtistAPI;
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;

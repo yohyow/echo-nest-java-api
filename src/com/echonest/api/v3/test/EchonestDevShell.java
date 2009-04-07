@@ -11,7 +11,7 @@ import com.echonest.api.v3.artist.Audio;
 import com.echonest.api.v3.artist.Blog;
 import com.echonest.api.v3.artist.DocumentList;
 import com.echonest.api.v3.artist.ArtistAPI;
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import com.echonest.api.v3.artist.News;
 import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
