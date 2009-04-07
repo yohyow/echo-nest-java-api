@@ -40,6 +40,11 @@ See the 'examples' package for more code samples
 Revision History
 ----------------
 
+Version 1.0  - April 7, 2009
+    - First release
+    - Some minor refactorings to make javadocs better
+    - javadoc improvements
+
 Version .2  - April 6, 2009
     - added support for the track-level methods
     - improved the documentation
