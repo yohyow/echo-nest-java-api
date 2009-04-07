@@ -9,7 +9,7 @@ import com.echonest.api.v3.artist.Artist;
 import com.echonest.api.v3.artist.Audio;
 import com.echonest.api.v3.artist.DocumentList;
 import com.echonest.api.v3.artist.ArtistAPI;
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

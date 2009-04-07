@@ -4,10 +4,10 @@
  */
 package com.echonest.api.v3.track;
 
-import com.echonest.api.util.EchoNestCommander;
+import com.echonest.api.v3.EchoNestCommander;
 import com.echonest.api.util.Utilities;
 import com.echonest.api.util.XmlUtil;
-import com.echonest.api.v3.artist.EchoNestException;
+import com.echonest.api.v3.EchoNestException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
