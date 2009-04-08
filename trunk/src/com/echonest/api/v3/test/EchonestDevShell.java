@@ -416,7 +416,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length == 2) {
                     artistAPI.saveCache(args[1] + ".artist.cache");
-                    trackAPI.saveCache( args[1] + ".track.cache");
+                    trackAPI.saveCache(args[1] + ".track.cache");
                 } else {
                     System.out.println("Usage: saveCache filename");
                 }
@@ -499,6 +499,43 @@ public class EchonestDevShell {
 
             public String getHelp() {
                 return "uploads a track";
+            }
+        });
+
+        shell.add("trackMD5", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length >= 2) {
+                    String arg = ci.mash(args, 1);
+                    System.out.println(trackAPI.getMD5(new File(arg)));
+                } else {
+                    System.out.println("Usage: trackMD5 file");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets the MD5 for a track";
+            }
+        });
+
+        shell.add("trackStatus", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length >= 2) {
+                    String arg = ci.mash(args, 1);
+                    String md5  = trackAPI.getMD5(new File(arg));
+                    TrackAPI.AnalysisStatus status = trackAPI.getAnalysisStatus(md5);
+                    System.out.println("Status: " + status);
+
+                } else {
+                    System.out.println("Usage: trackStatus file");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets the analysis status for a track";
             }
         });
 
@@ -839,7 +876,7 @@ public class EchonestDevShell {
 
     }
 
-     private void showAll(String idOrMd5) throws EchoNestException {
+    private void showAll(String idOrMd5) throws EchoNestException {
         System.out.println("Duration: " + trackAPI.getDuration(idOrMd5));
         System.out.println("FadeIn End: " + trackAPI.getEndOfFadeIn(idOrMd5));
         System.out.println("FadeOut Start: " + trackAPI.getStartOfFadeOut(idOrMd5));
