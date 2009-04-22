@@ -14,7 +14,8 @@ import org.w3c.dom.Element;
  * @author plamere
  */
 public class Review extends Document {
-    private static String[] fields = {"name", "review_text", "url", "summary", "date_found", "image_url"};
+    private static String[] fields = {"name", "review_text", "url", "summary", "date_found", 
+    "image_url", "release", "date_reviewed"};
 
     Review(Element element) throws EchoNestException {
         super(element, fields);
@@ -34,6 +35,14 @@ public class Review extends Document {
      */
     public String getReviewText() {
         return get("review_text");
+    }
+
+    /**
+     * Gets the name of the release
+     * @return the name of the release
+     */
+    public String getRelease() {
+        return get("release");
     }
 
     /**
@@ -66,5 +75,13 @@ public class Review extends Document {
      */
     public Date getDateFound() {
         return getDate("date_found");
+    }
+
+    /**
+     * Get the date the item was reviewed
+     * @return the date
+     */
+    public Date getDateReviewed() {
+        return getDate("date_reviewed");
     }
 }
