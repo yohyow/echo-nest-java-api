@@ -23,6 +23,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -102,6 +103,7 @@ public class Utilities {
 
         s = in.trim();
         s = s.toLowerCase();
+        s = removeAccents(s);
         s = deletedChars.matcher(s).replaceAll("");
         s = ampersand.matcher(s).replaceAll(" and ");
         s = leadingDash.matcher(s).replaceAll("");
@@ -369,8 +371,20 @@ public class Utilities {
         return s;
     }
 
+
+    public static String removeAccents(String text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                     .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+    }
+
+    public static void testAccent(String s) {
+        System.out.printf(" %s becomes %s\n", s, removeAccents(s));
+    }
+
+
     public static void main(String[] args) throws Exception {
-        System.out.println("md5 " + md5(new File("/Users/plamere/Downloads/Billy-Idol-Dancing-With-Myself-DONK-REMIX-14396.mp3")));
+        // System.out.println("md5 " + md5(new File("/Users/plamere/Downloads/Billy-Idol-Dancing-With-Myself-DONK-REMIX-14396.mp3")));
+        testAccent("Sigur Rós");
     }
 
 }

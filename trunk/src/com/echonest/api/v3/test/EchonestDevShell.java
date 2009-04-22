@@ -19,14 +19,17 @@ import com.echonest.api.v3.artist.Video;
 import com.echonest.api.v3.track.TrackAPI;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -331,6 +334,105 @@ public class EchonestDevShell {
             }
         });
 
+        shell.add("artistNameResolutionTest", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length != 2) {
+                    System.err.println("Usage: artistNameResolutionTest artistNameList.txt");
+                } else {
+                    NameResolutionTester nrt = new NameResolutionTester(artistAPI);
+                    nrt.testResolution(new File(args[1]));
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "tests the artist name resolution";
+            }
+        });
+
+        shell.add("artistSimilarityTest", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                int similars = 0;
+                int total = 0;
+                int resolved = 0;
+                if (args.length != 2) {
+                    System.err.println("Usage: artistSimilarityTest artistNameList.txt");
+                } else {
+                    List<String> names = readNamesFromFile(new File(args[1]));
+                    for (String name : names) {
+                        Artist artist = getArtist(name);
+                        if (artist != null) {
+                            resolved++;
+                            List<Scored<Artist>> artists = artistAPI.getSimilarArtists(artist, 0, ArtistAPI.MAX_ROWS);
+                            if (artists != null && artists.size() > 0) {
+                                similars++;
+                                System.out.println("Similar artist to " + name + " resolved to " + artist.getName());
+                                System.out.println("");
+                                for (Scored<Artist> sa : artists) {
+                                    System.out.println("  " + sa.getItem().getName());
+                                }
+                                System.out.println("");
+                            } else {
+                            }
+                        }
+                        total++;
+                        //System.out.printf("Sim: %d  Resolved: %d  Total:%d\n", similars, resolved, total);
+                    }
+                    System.out.println("Similars " + similars);
+                    System.out.println("Resolved " + resolved);
+                    System.out.println("Total " + total);
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "tests the artist similarty resolution";
+            }
+        });
+
+        shell.add("resolveArtist", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length < 2) {
+                    System.err.println("Usage: resolveArtist artist name");
+                } else {
+                    String artistName = ci.mash(args, 1);
+                    NameResolutionTester nrt = new NameResolutionTester(artistAPI);
+                    nrt.testResolution(artistName);
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "attempts to resolve a single artist name";
+            }
+        });
+
+        shell.add("crawlMp3sForArtistNames", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length != 2) {
+                    System.err.println("Usage: crawlMp3sForArtistNames dirName");
+                } else {
+                    Mp3FileCrawler crawler = new Mp3FileCrawler();
+                    crawler.addFile(new File(args[1]), true);
+                    Set<String> names = crawler.getArtistNames();
+                    List<String> sortedNames = new ArrayList(names);
+                    Collections.sort(sortedNames);
+                    for (String name : sortedNames) {
+                        System.out.println(name);
+                    }
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "prints all the artist names for a collection of mp3s";
+            }
+        });
+
         shell.add("get_hot", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
@@ -524,7 +626,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length >= 2) {
                     String arg = ci.mash(args, 1);
-                    String md5  = trackAPI.getMD5(new File(arg));
+                    String md5 = trackAPI.getMD5(new File(arg));
                     TrackAPI.AnalysisStatus status = trackAPI.getAnalysisStatus(md5);
                     System.out.println("Status: " + status);
 
@@ -1039,5 +1141,18 @@ public class EchonestDevShell {
 
         System.out.println("Total elements: " + list.size());
         System.out.println();
+    }
+
+    public List<String> readNamesFromFile(File file) throws IOException {
+        List<String> names = new ArrayList<String>();
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        String line;
+        while ((line = in.readLine()) != null) {
+            if (line.length() > 0) {
+                names.add(line.trim());
+            }
+        }
+        in.close();
+        return names;
     }
 }
