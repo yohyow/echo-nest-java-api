@@ -12,6 +12,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  *
@@ -21,8 +24,12 @@ public class ExpiringCache<T> {
 
     private HashMap<String, TimedItem<T>> cache = new HashMap<String, TimedItem<T>>();
     private long maxAge = 7 * 24 * 60 * 60 * 1000;
+    private int count = 0;
 
     public T get(String key) {
+
+        checkPurge();
+
         TimedItem<T> ti = cache.get(key);
         if (ti != null && ti.getAge() < maxAge) {
             return ti.getItem();
@@ -32,7 +39,29 @@ public class ExpiringCache<T> {
     }
 
     public void put(String key, T t) {
-        cache.put(key, new TimedItem<T>(t));
+        if (maxAge > 0) {
+            cache.put(key, new TimedItem<T>(t));
+        }
+    }
+
+
+    private void checkPurge() {
+        if (count++ % 1000 == 0) {
+            purge();
+        }
+    }
+
+    private void purge() {
+        Set<TimedItem<T>> removedSet = new HashSet<TimedItem<T>>();
+        for (Entry<String, TimedItem<T>>  e : cache.entrySet()) {
+            if (e.getValue().getAge() >= maxAge) {
+                removedSet.add(e.getValue());
+            }
+        }
+
+        for (TimedItem<T> item : removedSet) {
+            cache.remove(item);
+        }
     }
 
     public long getMaxAge() {
@@ -49,6 +78,7 @@ public class ExpiringCache<T> {
      * @throws java.io.IOException
      */
     public void save(String path) throws IOException {
+        purge();
         File file = new File(path);
         ObjectOutputStream oos = null;
         try {
@@ -87,6 +117,7 @@ public class ExpiringCache<T> {
                         }
                     }
                 }
+                purge();
             } catch (ClassNotFoundException ex) {
                 System.err.println("Can't find the class " + ex);
             } catch (IOException ex) {
@@ -124,5 +155,9 @@ class TimedItem<T> implements Serializable {
 
     public T getItem() {
         return item;
+    }
+
+    long getCreated() {
+        return created;
     }
 }

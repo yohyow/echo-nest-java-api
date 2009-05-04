@@ -1,36 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
-    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/util/Commander.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/util/ExpiringCache.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/util/Shell.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/util/Utilities.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/util/XmlUtil.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/EchoNestCommander.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/EchoNestException.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/ArtistAPI.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/Audio.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/Document.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/DocumentList.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/Main.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/Scored.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/artist/package.html</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/package.html</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/test/EchonestDevShell.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/test/Mp3FileCrawler.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/test/NameResolutionTester.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/test/TrackIdentifier.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/test/TrackInfo.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/FloatWithConfidence.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/IntWithConfidence.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/Metadata.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/Section.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/Segment.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/TrackAPI.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/com/echonest/api/v3/track/package.html</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/examples/FindArtistAudio.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/examples/FindSimilarArtists.java</file>
-        <file>file:/Users/plamere/EN/echo_nest_java_api/trunk/src/examples/GetTrackBPM.java</file>
-    </open-files>
 </project-private>

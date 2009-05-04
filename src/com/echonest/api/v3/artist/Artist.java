@@ -21,7 +21,7 @@ public class Artist implements Serializable {
      * @param name the name of the artist
      * @param id the id of the artist
      */
-    Artist(String name, String id) {
+    public Artist(String name, String id) {
         this.name = name;
         this.id = id;
     }
