@@ -1,0 +1,23 @@
+Tweaked getReviews to match API changes
+
+Added some name resolution tests
+--This line, and those below, will be ignored--
+
+_M   .
+M    nbproject/project.properties
+M    nbproject/project.xml
+M    nbproject/genfiles.properties
+M    nbproject/configs/shell.properties
+M    nbproject/private/private.xml
+M    nbproject/build-impl.xml
+A    lib
+AM   lib/JID3.jar
+M    src/com/echonest/api/v3/test/EchonestDevShell.java
+A    src/com/echonest/api/v3/test/Mp3FileCrawler.java
+A    src/com/echonest/api/v3/test/TrackInfo.java
+A    src/com/echonest/api/v3/test/TrackIdentifier.java
+M    src/com/echonest/api/v3/test/NameResolutionTester.java
+M    src/com/echonest/api/v3/artist/Review.java
+M    src/com/echonest/api/util/Utilities.java
+M    bin/shell
+A    resources

@@ -1,1 +1,2 @@
-java -Dtrace=True -mx1500m -DECHO_NEST_API_KEY=$MY_ECHO_NEST_KEY -cp dist/EchoNestAPI.jar com.echonest.api.v3.test.EchonestDevShell
+export jar=/Users/plamere/EN/echo_nest_java_api/trunk/dist/EchoNestAPI.jar
+java -Dtrace=True -mx1500m -DECHO_NEST_API_KEY=$MY_ECHO_NEST_KEY -cp $jar com.echonest.api.v3.test.EchonestDevShell
