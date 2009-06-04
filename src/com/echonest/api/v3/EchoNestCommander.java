@@ -169,6 +169,14 @@ public class EchoNestCommander {
         commander.setRetries(retries);
     }
 
+    /**
+     * Gets the performance stats for this API
+     * @return the performance stats
+     */
+    public PerformanceStats getPerformanceStats() {
+        return sm.getOverallPerformanceStats();
+    }
+
     protected void checkStatus(Document doc) throws EchoNestException {
         try {
             Element docElement = doc.getDocumentElement();

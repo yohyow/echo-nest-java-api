@@ -17,33 +17,27 @@ import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
 import com.echonest.api.v3.artist.Video;
 import com.echonest.api.v3.track.TrackAPI;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
  * @author plamere
  */
 public class EchonestDevShell {
-
     private Shell shell;
     private ArtistAPI artistAPI;
     private TrackAPI trackAPI;
     private Map<String, Artist> artistCache = new HashMap<String, Artist>();
-    private TestHarness testHarness;
+    private String currentTrackID = null;
 
-    EchonestDevShell() throws EchoNestException {
+    public EchonestDevShell() throws EchoNestException {
         artistAPI = new ArtistAPI();
         trackAPI = new TrackAPI();
         shell = new Shell();
@@ -51,8 +45,20 @@ public class EchonestDevShell {
         addEchoNestCommands();
     }
 
+    public EchonestDevShell(ArtistAPI artistAPI, TrackAPI trackAPI) throws EchoNestException {
+        this.artistAPI = artistAPI;
+        this.trackAPI = trackAPI;
+        shell = new Shell();
+        shell.setPrompt("nest% ");
+        addEchoNestCommands();
+    }
+
     public void go() {
         shell.run();
+    }
+
+    public Shell getShell() {
+        return shell;
     }
 
     private void addEchoNestCommands() {
@@ -86,32 +92,6 @@ public class EchonestDevShell {
             }
         });
 
-        shell.add("runTests", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                String tests = "basic";
-                int count = 100;
-
-                if (args.length >= 2) {
-                    count = Integer.parseInt(args[1]);
-                }
-
-                if (args.length >= 3) {
-                    tests = args[2];
-                }
-
-                if (testHarness == null) {
-                    testHarness = new TestHarness(artistAPI);
-                }
-
-                testHarness.runTests(tests, count);
-                return "";
-            }
-
-            public String getHelp() {
-                return "Usage: runTests  [count] [testset]";
-            }
-        });
 
         shell.add("search_artist_sl", new ShellCommand() {
 
@@ -149,6 +129,30 @@ public class EchonestDevShell {
                 return "finds similar artists";
             }
         });
+
+        shell.add("get_similars", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                List<Artist> query = new ArrayList<Artist>();
+                for (int i = 1; i < args.length; i++) {
+                    Artist artist = getArtist(args[i]);
+                    if (artist != null) {
+                        query.add(artist);
+                    }
+                }
+                List<Scored<Artist>> artists = artistAPI.getSimilarArtists(query, 0, ArtistAPI.MAX_ROWS);
+                for (Scored<Artist> sartist : artists) {
+                    System.out.printf("  %.2f %s\n", sartist.getScore(), sartist.getItem().getName());
+                }
+
+                return "";
+            }
+
+            public String getHelp() {
+                return "finds similar artists to a set of artists";
+            }
+        });
+
 
         shell.add("get_blogs", new ShellCommand() {
 
@@ -300,138 +304,6 @@ public class EchonestDevShell {
             }
         });
 
-        shell.add("report", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                Artist artist = getArtist(ci.mash(args, 1));
-                if (artist != null) {
-                    artistReport(artist.getId(), true);
-                    System.out.println("Familiarty for " + artist.getName() + " " + artistAPI.getFamiliarity(artist));
-                } else {
-                    System.out.println("Can't find artist");
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "generates an artist report";
-            }
-        });
-
-        shell.add("fullreport", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length != 2) {
-                    System.err.println("Usage: fullreport index-file-path");
-                } else {
-                    fullReport(args[1]);
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "generates an artist report from an index file";
-            }
-        });
-
-        shell.add("artistNameResolutionTest", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length != 2) {
-                    System.err.println("Usage: artistNameResolutionTest artistNameList.txt");
-                } else {
-                    NameResolutionTester nrt = new NameResolutionTester(artistAPI);
-                    nrt.testResolution(new File(args[1]));
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "tests the artist name resolution";
-            }
-        });
-
-        shell.add("artistSimilarityTest", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                int similars = 0;
-                int total = 0;
-                int resolved = 0;
-                if (args.length != 2) {
-                    System.err.println("Usage: artistSimilarityTest artistNameList.txt");
-                } else {
-                    List<String> names = readNamesFromFile(new File(args[1]));
-                    for (String name : names) {
-                        Artist artist = getArtist(name);
-                        if (artist != null) {
-                            resolved++;
-                            List<Scored<Artist>> artists = artistAPI.getSimilarArtists(artist, 0, ArtistAPI.MAX_ROWS);
-                            if (artists != null && artists.size() > 0) {
-                                similars++;
-                                System.out.println("Similar artist to " + name + " resolved to " + artist.getName());
-                                System.out.println("");
-                                for (Scored<Artist> sa : artists) {
-                                    System.out.println("  " + sa.getItem().getName());
-                                }
-                                System.out.println("");
-                            } else {
-                            }
-                        }
-                        total++;
-                        //System.out.printf("Sim: %d  Resolved: %d  Total:%d\n", similars, resolved, total);
-                    }
-                    System.out.println("Similars " + similars);
-                    System.out.println("Resolved " + resolved);
-                    System.out.println("Total " + total);
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "tests the artist similarty resolution";
-            }
-        });
-
-        shell.add("resolveArtist", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length < 2) {
-                    System.err.println("Usage: resolveArtist artist name");
-                } else {
-                    String artistName = ci.mash(args, 1);
-                    NameResolutionTester nrt = new NameResolutionTester(artistAPI);
-                    nrt.testResolution(artistName);
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "attempts to resolve a single artist name";
-            }
-        });
-
-        shell.add("crawlMp3sForArtistNames", new ShellCommand() {
-
-            public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length != 2) {
-                    System.err.println("Usage: crawlMp3sForArtistNames dirName");
-                } else {
-                    Mp3FileCrawler crawler = new Mp3FileCrawler();
-                    crawler.addFile(new File(args[1]), true);
-                    Set<String> names = crawler.getArtistNames();
-                    List<String> sortedNames = new ArrayList(names);
-                    Collections.sort(sortedNames);
-                    for (String name : sortedNames) {
-                        System.out.println(name);
-                    }
-                }
-                return "";
-            }
-
-            public String getHelp() {
-                return "prints all the artist names for a collection of mp3s";
-            }
-        });
 
         shell.add("get_hot", new ShellCommand() {
 
@@ -593,6 +465,7 @@ public class EchonestDevShell {
                         id = trackAPI.uploadTrack(new File(arg), false);
                     }
                     System.out.println("ID: " + id);
+                    currentTrackID = id;
                 } else {
                     System.out.println("Usage: trackUpload file|url");
                 }
@@ -642,24 +515,11 @@ public class EchonestDevShell {
         });
 
         shell.add("trackUploadDir", new ShellCommand() {
-
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length >= 2) {
                     String arg = ci.mash(args, 1);
                     File dir = new File(arg);
-                    if (dir.isDirectory()) {
-                        File[] files = dir.listFiles();
-                        for (File f : files) {
-                            if (f.getAbsolutePath().toLowerCase().endsWith("mp3")) {
-                                System.out.println("Uploading " + f);
-                                String id = trackAPI.uploadTrack(f, false);
-                                System.out.println("   done. ID is " + id);
-                            }
-                        }
-
-                    } else {
-                        System.out.println("Usage: " + args[0] + " dir");
-                    }
+                    processDir(dir);
                 } else {
                     System.out.println("Usage: trackUploadDir dir");
                 }
@@ -670,6 +530,9 @@ public class EchonestDevShell {
                 return "uploads a directory of tracks";
             }
         });
+
+
+
 
         shell.add("trackShowDir", new ShellCommand() {
 
@@ -704,12 +567,10 @@ public class EchonestDevShell {
         shell.add("trackDuration", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    float duration = trackAPI.getDuration(arg);
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    float duration = trackAPI.getDuration(id);
                     System.out.println("Duration: " + duration);
-                } else {
-                    System.out.println("Usage: trackDuration id|md5");
                 }
                 return "";
             }
@@ -722,11 +583,9 @@ public class EchonestDevShell {
         shell.add("trackEndOfFadeIn", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getEndOfFadeIn(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getEndOfFadeIn(id));
                 }
                 return "";
             }
@@ -739,11 +598,9 @@ public class EchonestDevShell {
         shell.add("trackStartOfFadeOut", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getStartOfFadeOut(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getStartOfFadeOut(id));
                 }
                 return "";
             }
@@ -756,11 +613,9 @@ public class EchonestDevShell {
         shell.add("trackTimeSignature", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getTimeSignature(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getTimeSignature(id));
                 }
                 return "";
             }
@@ -773,11 +628,9 @@ public class EchonestDevShell {
         shell.add("trackMode", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getMode(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getMode(id));
                 }
                 return "";
             }
@@ -790,11 +643,9 @@ public class EchonestDevShell {
         shell.add("trackTempo", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getTempo(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getTempo(id));
                 }
                 return "";
             }
@@ -807,11 +658,9 @@ public class EchonestDevShell {
         shell.add("trackLoudness", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getOverallLoudness(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getOverallLoudness(id));
                 }
                 return "";
             }
@@ -824,11 +673,9 @@ public class EchonestDevShell {
         shell.add("trackMetadata", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getMetadata(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getMetadata(id));
                 }
                 return "";
             }
@@ -841,11 +688,9 @@ public class EchonestDevShell {
         shell.add("trackKey", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    System.out.println(trackAPI.getKey(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    System.out.println(trackAPI.getKey(id));
                 }
                 return "";
             }
@@ -858,11 +703,9 @@ public class EchonestDevShell {
         shell.add("trackBeats", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    show("beats", trackAPI.getBeats(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    show("beats", trackAPI.getBeats(id));
                 }
                 return "";
             }
@@ -875,11 +718,9 @@ public class EchonestDevShell {
         shell.add("trackBars", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    show("bars", trackAPI.getBars(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    show("bars", trackAPI.getBars(id));
                 }
                 return "";
             }
@@ -892,11 +733,9 @@ public class EchonestDevShell {
         shell.add("trackTatums", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    show("tatums", trackAPI.getTatums(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    show("tatums", trackAPI.getTatums(id));
                 }
                 return "";
             }
@@ -909,11 +748,9 @@ public class EchonestDevShell {
         shell.add("trackSections", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    show("sections", trackAPI.getSections(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    show("sections", trackAPI.getSections(id));
                 }
                 return "";
             }
@@ -926,11 +763,9 @@ public class EchonestDevShell {
         shell.add("trackSegments", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    show("segments", trackAPI.getSegments(arg));
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    show("segments", trackAPI.getSegments(id));
                 }
                 return "";
             }
@@ -943,11 +778,9 @@ public class EchonestDevShell {
         shell.add("trackShowAll", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    showAll(arg);
-                } else {
-                    System.out.println("Usage: " + args[0] + " id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    showAll(id);
                 }
                 return "";
             }
@@ -957,16 +790,12 @@ public class EchonestDevShell {
             }
         });
 
-
-
         shell.add("trackWait", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                if (args.length == 2) {
-                    String arg = args[1];
-                    trackAPI.waitForAnalysis(arg, 60000);
-                } else {
-                    System.out.println("Usage: trackWait id|md5");
+                String id = getTrackIDFromArgs(args);
+                if (id != null) {
+                    trackAPI.waitForAnalysis(id, 60000);
                 }
                 return "";
             }
@@ -975,7 +804,6 @@ public class EchonestDevShell {
                 return "waits for an analysis to be complete";
             }
         });
-
     }
 
     private void showAll(String idOrMd5) throws EchoNestException {
@@ -995,8 +823,21 @@ public class EchonestDevShell {
         show("segments", trackAPI.getSegments(idOrMd5));
     }
 
+
+    private String getTrackIDFromArgs(String[] args) {
+        if (args.length  == 1 && currentTrackID != null) {
+            return currentTrackID;
+        } else if (args.length == 2) {
+            return args[1];
+        } else {
+            System.out.println("Usage: " + args[0] + " id or md5");
+            return null;
+        }
+    }
+
     private Artist getArtist(String name) throws EchoNestException {
-        Artist artist = artistCache.get(name);
+        Artist artist = null;
+
         if (artist == null) {
             if (name.startsWith("music://")) {
                 artist = artistAPI.getProfile(name);
@@ -1012,126 +853,27 @@ public class EchonestDevShell {
                 artistCache.put(artist.getId(), artist);
                 artistCache.put(artist.getName(), artist);
             }
-
         }
         return artist;
     }
 
-    public static void main(String[] args) {
-        try {
-            EchonestDevShell shell = new EchonestDevShell();
-            shell.go();
-        } catch (EchoNestException e) {
-            System.err.println("Can't connect to the echonest");
-        }
 
-    }
-    private final static int MAX_NEWS = 15;
-    private final static int MAX_REVIEWS = 15;
-    private final static int MAX_BLOGS = 15;
-
-    private void fullReport(String path) throws IOException, EchoNestException {
-        BufferedReader in = new BufferedReader(new FileReader(path));
-        String line = null;
-
-        System.out.println("<html>");
-        System.out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/> ");
-        System.out.println("<body>");
-
-        while ((line = in.readLine()) != null) {
-            String[] fields = line.split("::");
-            if (fields.length == 2) {
-                System.err.println("Processing " + fields[0]);
-                String id = "music://id.echonest.com/~/AR/" + fields[1].trim();
-                artistReport(id, false);
-            } else {
-                System.err.println("Bad line " + line);
+    private void processDir(File dir) throws IOException, EchoNestException {
+        if (dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            for (File f : files) {
+                if (f.getAbsolutePath().toLowerCase().endsWith(".mp3")) {
+                    System.out.println("Uploading " + f);
+                    String id = trackAPI.uploadTrack(f, true);
+                    System.out.println("   done. ID is " + id);
+                } else if (f.isDirectory()) {
+                    processDir(f);
+                }
             }
-
         }
-        System.out.println("</body>");
-        System.out.println("</html>");
     }
 
-    private void artistReport(String id, boolean header) throws EchoNestException {
-        Artist artist = artistAPI.getProfile(id);
-        if (artist != null) {
-            if (header) {
-                System.out.println("<html>");
-                System.out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/> ");
-                System.out.println("<body>");
-            }
 
-            System.out.println("<div class=\"artist\">");
-            System.out.println("<h1>" + artist.getName() + "</h1>");
-            artistBlogs(artist);
-            artistReviews(artist);
-            artistNews(artist);
-            System.out.println("</div>");
-            if (header) {
-                System.out.println("</body>");
-                System.out.println("</html>");
-            }
-
-        } else {
-            System.err.println("Can't find artist for " + id);
-        }
-
-    }
-
-    private void artistNews(Artist artist) throws EchoNestException {
-        System.out.println("<h2> News for " + artist.getName() + "</h2>");
-        DocumentList<News> newsList = artistAPI.getNews(artist.getId(), 0, MAX_NEWS);
-        for (News news : newsList.getDocuments()) {
-            System.out.println("<h3>" + mklink(news.getURL(), news.getName()) + "</h3>");
-            System.out.println("From: " + news.getURL() + "<p>");
-            System.out.println("<div class=\"summary\">" + detag(news.getSummary()) + "</div>");
-        }
-
-    }
-
-    private void artistBlogs(Artist artist) throws EchoNestException {
-        System.out.println("<h2> Blogs for " + artist.getName() + "</h2>");
-        DocumentList<Blog> blogs = artistAPI.getBlogs(artist.getId(), 0, MAX_NEWS);
-        for (Blog blog : blogs.getDocuments()) {
-            System.out.println("<h3>" + mklink(blog.getURL(), blog.getName()) + "</h3>");
-            System.out.println("From: " + blog.getURL() + "<p>");
-            System.out.println("<div class=\"summary\">" + detag(blog.getSummary()) + "</div>");
-        }
-
-    }
-
-    private void artistReviews(Artist artist) throws EchoNestException {
-        System.out.println("<h2> Reviews for " + artist.getName() + "</h2>");
-        DocumentList<Review> reviews = artistAPI.getReviews(artist.getId(), 0, MAX_NEWS);
-        for (Review review : reviews.getDocuments()) {
-            System.out.println("<h3>" + mklink(review.getURL(), review.getName()) + "</h3>");
-            System.out.println("From: " + review.getURL() + "<p>");
-            System.out.println("<div class=\"summary\">" + detag(review.getSummary()) + "</div>");
-        }
-
-    }
-
-    private String mklink(String url, String text) {
-        if (url != null && text != null) {
-            return "<a href=\"" + url + "\">" + text + "</a>";
-        } else if (text != null) {
-            return text;
-        } else {
-            return "";
-        }
-
-    }
-
-    public static String detag(
-            String s) {
-        if (s != null) {
-            return s.replaceAll("\\<.*?\\>", "");
-        } else {
-            return "";
-        }
-
-    }
 
     private void show(String title, List<?> list) {
         System.out.println(title);
@@ -1143,16 +885,12 @@ public class EchonestDevShell {
         System.out.println();
     }
 
-    public List<String> readNamesFromFile(File file) throws IOException {
-        List<String> names = new ArrayList<String>();
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-        String line;
-        while ((line = in.readLine()) != null) {
-            if (line.length() > 0) {
-                names.add(line.trim());
-            }
+    public static void main(String[] args) {
+        try {
+            EchonestDevShell shell = new EchonestDevShell();
+            shell.go();
+        } catch (EchoNestException e) {
+            System.err.println("Can't connect to the echonest");
         }
-        in.close();
-        return names;
     }
 }
