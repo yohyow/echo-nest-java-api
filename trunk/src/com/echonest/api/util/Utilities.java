@@ -126,6 +126,15 @@ public class Utilities {
         //System.out.println(in + " BECOMES " + s);
         return s;
     }
+
+    public static boolean nameEquals(String s1, String s2) {
+        if (s1.equalsIgnoreCase(s2)) {
+            return true;
+        } else {
+            return normalize(s1).equals(normalize(s2));
+        }
+    }
+
     //static Pattern specialChars = Pattern.compile("[ -/:-@\\[-`]");
     //static Pattern specialChars = Pattern.compile("[<>/\\!#\\$]");
     static Pattern specialChars = Pattern.compile("[\\&,\\[\\]@\\-\\(\\)<>/\\!#\\$]");
