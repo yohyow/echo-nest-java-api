@@ -108,5 +108,13 @@ public class XmlUtil {
         }
         return defaultValue;
     }
+
+
+    public static String entify(String s) {
+        s = s.replaceAll("<", "&lt;");
+        s = s.replaceAll(">", "&gt;");
+        s = s.replaceAll("&", "&amp;");
+        return s;
+    }
 }
 
