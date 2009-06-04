@@ -4,6 +4,7 @@
  */
 package com.echonest.api.util;
 
+import com.echonest.api.v3.PerformanceStats;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,12 +66,43 @@ public class StatsManager {
         return opData;
     }
 
+    public PerformanceStats getOverallPerformanceStats() {
+        int total = 0;
+        int errs = 0;
+        int sum = 0;
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
+
+        PerformanceStats ps = new PerformanceStats();
+        List<OpData> opList = new ArrayList<OpData>(map.values());
+        for (OpData opData : opList) {
+            total += opData.count;
+            errs += opData.error;
+            sum += opData.sumTime;
+
+            if (opData.minTime < min) {
+                min = opData.minTime;
+            }
+            if (opData.maxTime > max) {
+                max = opData.maxTime;
+            }
+        }
+        ps.setCalls(total);
+        ps.setFailures(errs);
+        ps.setTotalCallTime(sum);
+        ps.setMinCallTime(min);
+        ps.setMinCallTime(max);
+        return ps;
+    }
+
     public void dump() {
         System.out.printf("||%5s|| %4s|| %6s || %6s || %6s || %s ||\n",
                 "Calls", "Fail", "Avg", "Min", "Max", "Method");
         int total = 0;
         int errs = 0;
         int sum = 0;
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
 
         List<OpData> opList = new ArrayList<OpData>(map.values());
         Collections.sort(opList);
@@ -139,6 +171,7 @@ class OpData implements Comparable<OpData> {
             return 0;
         }
     }
+
 
     public String toString() {
         return String.format("|| %3d || %3d || %6d || %6d || %6d || %s ||",

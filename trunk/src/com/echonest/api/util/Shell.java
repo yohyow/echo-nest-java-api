@@ -613,6 +613,10 @@ public class Shell extends Thread {
         boolean echo = false;
         boolean error = false;
 
+        if (message == null) {
+            return null;
+        }
+
         Matcher m = historyPush.matcher(message);
         if (m.matches()) {
             justPush = true;
