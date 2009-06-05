@@ -17,7 +17,7 @@ import java.io.File;
  * @author plamere
  */
 /**
- * An example of using the Echo Nest API to find similar artists to an artist
+ * An example of using the Echo Nest API to get the tempo for a track
  */
 public class GetTrackBPM {
 

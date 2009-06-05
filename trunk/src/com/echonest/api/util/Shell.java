@@ -508,7 +508,8 @@ public class Shell extends Thread {
                     response = "ERR  CMD_NOT_FOUND";
                 }
             } catch (Exception e) {
-                response = "Exception: " + e.getMessage();
+                response = "Exception: " + e;
+                e.printStackTrace();
             }
 
             totalCommands++;
