@@ -1,1 +1,4 @@
+# example script that will get the average BPM for an MP3 file
+# usage: GetTrackBPM  path-to-mp3.mp3 
+
 java -DECHO_NEST_API_KEY=$MY_ECHO_NEST_KEY -cp dist/EchoNestAPI.jar examples.GetTrackBPM "$*"

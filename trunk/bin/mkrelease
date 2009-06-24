@@ -2,6 +2,7 @@ ant
 ver=$1
 dir=echo-nest-java-api-$ver
 mkdir -p $dir
+bin/fixrelease
 cp docs/README.TXT  $dir
 cp dist/EchoNestAPI.jar $dir
 cp -r dist/javadoc $dir
