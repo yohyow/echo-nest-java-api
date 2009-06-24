@@ -294,7 +294,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
-                    System.out.println("Familiarty for " + artist.getName() + " " + artistAPI.getFamiliarity(artist));
+                    System.out.println("Familiarity for " + artist.getName() + " " + artistAPI.getFamiliarity(artist));
                 } else {
                     System.out.println("Can't find artist");
                 }
