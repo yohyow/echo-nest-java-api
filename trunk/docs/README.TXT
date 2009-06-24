@@ -6,11 +6,9 @@ get a developer key from developer.echonest.com.
 
     http://developer.echonest.com/
 
-
 License:
 
     New BSD License - http://www.opensource.org/licenses/bsd-license.php
-
 
 
 Quick Start
@@ -36,6 +34,22 @@ with the API:
 
 
 See the 'examples' package for more code samples
+
+
+The Echo Nest Shell
+------------------
+Included with the API is a command line interface to the Echo Nest API. You can use this shell to interact with the Echo Nest.  To run the shell invoke:
+
+java -cp dist/EchoNestAPI.jar com.echonest.api.v3.test.EchonestDevShell
+
+Type 'help' to show the list of availabe commands.  Try some:
+
+nest%  get_similar weezer
+nest%  get_fam led zeppelin
+nest%  trackUpload song.mp3
+nest%  trackDuration
+
+
 
 Revision History
 ----------------

@@ -65,8 +65,6 @@ public class EchoNestCommander {
 
             commander = new Commander("EchoNest", prefix, "&version=3&api_key=" + key);
             commander.setRetries(5);
-            commander.setTraceSends(false);
-            commander.setTrace(false);
             commander.setMinimumCommandPeriod(500L);
             commander.setTimeout(30 * 1000);
             cache = new ExpiringCache<Document>();

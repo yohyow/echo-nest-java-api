@@ -82,9 +82,6 @@ public class Commander {
             throw new IOException("Can't load parser " + e);
         }
 
-        if (trace) {
-            System.out.println("Tracing is on");
-        }
         if (log) {
             String logname = name + ".log";
             try {
