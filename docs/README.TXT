@@ -1,6 +1,5 @@
 The Echo Nest Java API
 ----------------------
-
 This is a Java client for the Echo Nest Java API.  To use the API 
 get a developer key from developer.echonest.com.
 
@@ -13,7 +12,6 @@ License:
 
 Quick Start
 -------------
-
 Here's some sample code that shows how to get similar artists
 with the API:
 
@@ -33,22 +31,23 @@ with the API:
   }
 
 
-See the 'examples' package for more code samples
+See the 'examples' package for more code samples. Note that the jar file is
+built with Java 1.6.
 
 
 The Echo Nest Shell
 ------------------
-Included with the API is a command line interface to the Echo Nest API. You can use this shell to interact with the Echo Nest.  To run the shell invoke:
+Included with the API is a command line interface to the Echo Nest API. You can use this shell to interact with the Echo Nest.  To run the shell invoke 
+the 'enshell' script, or run the command:
 
-java -cp dist/EchoNestAPI.jar com.echonest.api.v3.test.EchonestDevShell
+java -DECHO_NEST_API_KEY=$MY_ECHO_NEST_KEY -jar EchoNestAPI.jar 
 
 Type 'help' to show the list of availabe commands.  Try some:
 
-nest%  get_similar weezer
-nest%  get_fam led zeppelin
-nest%  trackUpload song.mp3
-nest%  trackDuration
-
+    nest%  get_similar weezer
+    nest%  get_fam led zeppelin
+    nest%  trackUpload song.mp3
+    nest%  trackDuration
 
 
 Revision History
