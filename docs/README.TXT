@@ -40,6 +40,12 @@ See the 'examples' package for more code samples
 Revision History
 ----------------
 
+Version 1.1  - June 24, 2009
+    - fixed bug where cache would grow without limits
+    - added 'setMaxCacheSize' method to artist and track APIs
+    - added 'setMiniumumCommandPeriod' method to artist and track APIs
+    - removed extraneous test code
+
 Version 1.0  - April 7, 2009
     - First release
     - Some minor refactorings to make javadocs better

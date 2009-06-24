@@ -348,6 +348,21 @@ public class Utilities {
         return s.replaceAll("\\<.*?\\>", "");
     }
 
+    public static String md5(String s) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(s.getBytes());
+            byte[] md5sum = digest.digest();
+            BigInteger bigInt = new BigInteger(1, md5sum);
+            String output = bigInt.toString(16);
+            // the MD5 needs to be 32 characters long.
+            return prepad(output, 32, '0');
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("No MD5 algorithm. we are sunk.");
+            return s;
+        } 
+    }
+
     public static String md5(File f) throws IOException {
         byte[] buffer = new byte[8192];
         int read = 0;
@@ -392,8 +407,8 @@ public class Utilities {
 
 
     public static void main(String[] args) throws Exception {
-        // System.out.println("md5 " + md5(new File("/Users/plamere/Downloads/Billy-Idol-Dancing-With-Myself-DONK-REMIX-14396.mp3")));
-        testAccent("Sigur Rós");
+        System.out.println("md5 " + md5("http://www.theclerisy.net/glws/Weezer%20-%20Mansion%20of%20Cardboard.mp3"));
+        //testAccent("Sigur Rós");
     }
 
 }

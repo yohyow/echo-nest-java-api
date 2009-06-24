@@ -74,8 +74,9 @@ public class EchoNestCommander {
         } catch (IOException ioe) {
             throw new EchoNestException(ioe);
         }
-    //commander.setMinimumCommandPeriod(0);
     }
+
+
 
     /**
      * Gets the API key in use
@@ -100,7 +101,6 @@ public class EchoNestCommander {
     public void setIgnoreParsingErrors(boolean ignoreParsingErrors) {
         this.ignoreParsingErrors = ignoreParsingErrors;
     }
-
 
     /**
      * Sets the maximum time that values will be cached by this library. To disable
@@ -167,6 +167,22 @@ public class EchoNestCommander {
      */
     public void setRetries(int retries) {
         commander.setRetries(retries);
+    }
+
+    /**
+     * Sets the minimum command period, default is 500
+     * @param milliseconds command period in milliseconds
+     */
+    public void setMinimumCommandPeriod(int milliseconds) {
+        commander.setMinimumCommandPeriod(milliseconds);
+    }
+
+    /**
+     * Sets the command time out (default is 30,000 ms
+     * @param milliseconds command timeout
+     */
+    public void setTimeout(int milliseconds) {
+        commander.setTimeout(milliseconds);
     }
 
     /**
@@ -279,9 +295,5 @@ public class EchoNestCommander {
                 return 0;
             }
         }
-    }
-
-    protected void setTimeout(int timeout) {
-        commander.setTimeout(timeout);
     }
 }

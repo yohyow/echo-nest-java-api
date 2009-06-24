@@ -49,6 +49,14 @@ public class Document {
         this.type = type;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
     String get(String name) {
         return values.get(name);
     }

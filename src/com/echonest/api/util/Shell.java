@@ -12,6 +12,9 @@ import java.util.*;
  * input stream, parses them into commands and executes them, results
  * are sent back on the output stream.
  *
+ * TODO: this was written before there were generics, it should be upgraded
+ * to use them.
+ *
  * @see Shell
  */
 public class Shell extends Thread {
@@ -538,7 +541,7 @@ public class Shell extends Thread {
      */
     protected String[] parseMessage(String message) {
         int tokenType;
-        List words = new ArrayList(20);
+        List<String> words = new ArrayList<String>(20);
         StreamTokenizer st = new StreamTokenizer(new StringReader(message));
 
         st.resetSyntax();

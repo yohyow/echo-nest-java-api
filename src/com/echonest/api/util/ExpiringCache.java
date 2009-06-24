@@ -13,16 +13,27 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 
 /**
  *
  * @author plamere
  */
 public class ExpiringCache<T> {
+    private int maxSize = 1000;
 
-    private HashMap<String, TimedItem<T>> cache = new HashMap<String, TimedItem<T>>();
+    // an LRU cache
+    private HashMap<String, TimedItem<T>> cache = new LinkedHashMap<String, TimedItem<T>>(maxSize, .7f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, TimedItem<T>> eldest) {
+            return size() > maxSize;
+        }
+    };
+
     private long maxAge = 7 * 24 * 60 * 60 * 1000;
     private int count = 0;
 
@@ -39,7 +50,7 @@ public class ExpiringCache<T> {
     }
 
     public void put(String key, T t) {
-        if (maxAge > 0) {
+        if (maxSize > 0 && maxAge > 0) {
             cache.put(key, new TimedItem<T>(t));
         }
     }
@@ -52,15 +63,15 @@ public class ExpiringCache<T> {
     }
 
     private void purge() {
-        Set<TimedItem<T>> removedSet = new HashSet<TimedItem<T>>();
+        Set<String> removedSet = new HashSet<String>();
         for (Entry<String, TimedItem<T>>  e : cache.entrySet()) {
             if (e.getValue().getAge() >= maxAge) {
-                removedSet.add(e.getValue());
+                removedSet.add(e.getKey());
             }
         }
 
-        for (TimedItem<T> item : removedSet) {
-            cache.remove(item);
+        for (String key : removedSet) {
+            cache.remove(key);
         }
     }
 
@@ -71,6 +82,16 @@ public class ExpiringCache<T> {
     public void setMaxAge(long maxAge) {
         this.maxAge = maxAge;
     }
+
+    public int getMaxSize() {
+        return maxSize;
+    }
+
+    public void setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
+    }
+
+
 
     /**
      * Attempts to save the cache to the given path
@@ -138,7 +159,6 @@ public class ExpiringCache<T> {
         return item.getAge() > maxAge;
     }
 }
-
 class TimedItem<T> implements Serializable {
 
     private long created;

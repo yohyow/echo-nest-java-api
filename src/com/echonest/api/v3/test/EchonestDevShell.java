@@ -54,6 +54,8 @@ public class EchonestDevShell {
     }
 
     public void go() {
+        System.out.println("Welcome to The Echo Nest API Shell");
+        System.out.println("   type 'help' ");
         shell.run();
     }
 
