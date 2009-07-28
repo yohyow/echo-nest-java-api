@@ -498,6 +498,12 @@ public class ArtistAPI extends EchoNestCommander {
         return getSimilarArtists(ids, start, count);
     }
 
+    public List<Scored<Artist>> getSimilarArtists(String id, int start, int count, boolean limit) throws EchoNestException {
+        String[] ids = new String[1];
+        ids[0] = id;
+        return getSimilarArtists(ids, start, count, limit);
+    }
+
 
     /**
      * Return similar artists given one or more artists for comparison.
@@ -509,6 +515,22 @@ public class ArtistAPI extends EchoNestCommander {
      */
     public List<Scored<Artist>> getSimilarArtists(String[] ids, int start, int count) throws EchoNestException {
         String cmdURL = "get_similar?start=" + start + "&rows=" + count;
+        StringBuilder sb = new StringBuilder();
+        for (String id : ids) {
+            sb.append("&id=");
+            sb.append(id);
+        }
+        cmdURL += sb.toString();
+        List<Scored<Artist>> artists = fetchSimilarArtists(cmdURL);
+        if (artists.size() > count) {
+            System.err.printf("getSimilarArtists retuned %d, expected %d\n", artists.size(), count);
+            artists = artists.subList(0, count);
+        }
+        return artists;
+    }
+
+    public List<Scored<Artist>> getSimilarArtists(String[] ids, int start, int count, boolean limit) throws EchoNestException {
+        String cmdURL = "get_similar?start=" + start + "&rows=" + count + "&limit=" + (limit ? "Y"  : "N");
         StringBuilder sb = new StringBuilder();
         for (String id : ids) {
             sb.append("&id=");
