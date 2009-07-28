@@ -118,6 +118,23 @@ public class EchoNestCommander {
     }
 
     /**
+     * Sets the maximum number of items in the cache
+     * @param size the size of the cache
+     */
+    public void setMaxCacheSize(int size) {
+        cache.setMaxSize(size);
+    }
+
+    /**
+     * Gets the maximum size of the cache
+     * @param size
+     * @return
+     */
+    public int getMaxCacheSize(int size) {
+        return cache.getMaxSize();
+    }
+
+    /**
      * Saves the cache to the give path
      * @param path the path to the cache
      * @throws java.io.IOException
