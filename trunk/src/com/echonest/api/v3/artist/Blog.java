@@ -14,7 +14,7 @@ import org.w3c.dom.Element;
  * @author plamere
  */
 public class Blog extends Document {
-    private static String[] fields = {"name", "url", "summary", "date_found"};
+    private static String[] fields = {"name", "url", "summary", "date_found", "date_posted"};
 
     Blog(Element element) throws EchoNestException {
         super(element, fields);
@@ -50,5 +50,13 @@ public class Blog extends Document {
      */
     public Date getDateFound() {
         return getDate("date_found");
+    }
+
+    /**
+     * Gets the date posted
+     * @return the date posted
+     */
+    public Date getDatePosted() {
+        return getDate("date_posted");
     }
 }
