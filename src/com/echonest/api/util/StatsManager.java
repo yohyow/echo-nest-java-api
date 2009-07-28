@@ -115,12 +115,14 @@ public class StatsManager {
 
         int successCount = total - errs;
         System.out.println("");
-        System.out.printf(" Total calls : %d \n",  total);
-        System.out.printf(" Total errors: %d \n",  errs);
-        System.out.printf(" Success Rate: %d %%\n", 100 * (total - errs) / total);
+        System.out.printf(" Total calls : %d \n", total);
+        System.out.printf(" Total errors: %d \n", errs);
+        if (total > 0) {
+            System.out.printf(" Success Rate: %d %%\n", 100 * (total - errs) / total);
+        }
 
         if (successCount > 0) {
-            System.out.printf(" Average Time: %d ms\n",  sum / successCount);
+            System.out.printf(" Average Time: %d ms\n", sum / successCount);
         }
         System.out.println("");
     }
@@ -171,7 +173,6 @@ class OpData implements Comparable<OpData> {
             return 0;
         }
     }
-
 
     public String toString() {
         return String.format("|| %3d || %3d || %6d || %6d || %6d || %s ||",
