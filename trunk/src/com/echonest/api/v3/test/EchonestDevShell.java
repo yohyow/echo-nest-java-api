@@ -93,6 +93,20 @@ public class EchonestDevShell {
                 return "searches for artists exact match  ";
             }
         });
+        shell.add("qbd", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                List<Artist> artists = artistAPI.searchArtistByDescription(ci.mash(args, 1), 15);
+                for (Artist artist : artists) {
+                    System.out.println(artist.getId() + " " + artist.getName());
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "query by description";
+            }
+        });
 
 
         shell.add("search_artist_sl", new ShellCommand() {
