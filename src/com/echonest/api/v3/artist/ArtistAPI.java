@@ -109,6 +109,37 @@ public class ArtistAPI extends EchoNestCommander {
     }
 
     /**
+     * Searches for artists by description. Only available for premium API users
+     * @param a description of the type of artists
+     * @param count the max number returned
+     * @throws EchoNestException
+     */
+    public List<Artist> searchArtistByDescription(String description, int count) throws EchoNestException {
+        List<Artist> artists = new ArrayList<Artist>();
+
+        try {
+            String cmdURL = "search_artists?query=" + encode(description);
+            cmdURL += "&type=description&rows=" + count;
+            Document doc = sendCommand("search_artist", cmdURL);
+            Element docElement = doc.getDocumentElement();
+            Element artistList = (Element) XmlUtil.getDescendent(docElement, "artists");
+            if (artistList != null) {
+                NodeList itemList = artistList.getElementsByTagName("artist");
+                for (int i = 0; i < itemList.getLength(); i++) {
+                    Element item = (Element) itemList.item(i);
+                    String name = XmlUtil.getDescendentText(item, "name");
+                    String enid = XmlUtil.getDescendentText(item, "id");
+                    Artist artist = new Artist(name, enid);
+                    artists.add(artist);
+                }
+            }
+            return artists;
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
+    }
+
+    /**
      * Returns a list of blogs about the given artist
      * @param artist the artist of interest
      * @param startRow the starting row of the query

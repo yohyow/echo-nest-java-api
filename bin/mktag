@@ -1,0 +1,3 @@
+svn copy https://echo-nest-java-api.googlecode.com/svn/trunk/ \
+    https://echo-nest-java-api.googlecode.com/svn/tags/v1.1 \
+    -m "tagging for release 1.1"
