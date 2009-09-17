@@ -25,10 +25,10 @@ import org.w3c.dom.NodeList;
  * @author plamere
  */
 public class Document {
-
     private String id;
     private String type;
     private Map<String, String> values = new HashMap<String, String>();
+    private boolean disableFieldCheck = true;
 
     Document(Element element, String[] validFields) throws EchoNestException {
         values = new HashMap<String, String>();
@@ -99,7 +99,7 @@ public class Document {
     }
 
     private void checkFields(Set<String> found, String[] validFields) throws EchoNestException {
-        if (validFields != null) {
+        if (!disableFieldCheck && validFields != null) {
             Set<String> validSet = new HashSet<String>(Arrays.asList(validFields));
 
             if (!(found.containsAll(validSet) && validSet.containsAll(found))) {
