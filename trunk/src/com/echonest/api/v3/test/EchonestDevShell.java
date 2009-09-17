@@ -36,10 +36,11 @@ public class EchonestDevShell {
     private TrackAPI trackAPI;
     private Map<String, Artist> artistCache = new HashMap<String, Artist>();
     private String currentTrackID = null;
+    private int displayCount = ArtistAPI.MAX_ROWS;
 
     public EchonestDevShell() throws EchoNestException {
         artistAPI = new ArtistAPI();
-        trackAPI = new TrackAPI();
+        trackAPI = new TrackAPI(System.getProperty("ECHO_NEST_API_KEY"), null, 3);
         shell = new Shell();
         shell.setPrompt("nest% ");
         addEchoNestCommands();
@@ -93,6 +94,23 @@ public class EchonestDevShell {
                 return "searches for artists exact match  ";
             }
         });
+
+        shell.add("display_count", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    displayCount = Integer.parseInt(args[1]);
+                } else {
+                    System.out.println("Display count: "  + displayCount);
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "sets/gets the number of items to display";
+            }
+        });
+
         shell.add("qbd", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
@@ -130,7 +148,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Similarity for " + artist.getName());
-                    List<Scored<Artist>> artists = artistAPI.getSimilarArtists(artist, 0, ArtistAPI.MAX_ROWS);
+                    List<Scored<Artist>> artists = artistAPI.getSimilarArtists(artist, 0, displayCount);
                     for (Scored<Artist> sartist : artists) {
                         System.out.printf("  %.2f %s\n", sartist.getScore(), sartist.getItem().getName());
                     }
@@ -156,7 +174,7 @@ public class EchonestDevShell {
                         query.add(artist);
                     }
                 }
-                List<Scored<Artist>> artists = artistAPI.getSimilarArtists(query, 0, ArtistAPI.MAX_ROWS);
+                List<Scored<Artist>> artists = artistAPI.getSimilarArtists(query, 0, displayCount);
                 for (Scored<Artist> sartist : artists) {
                     System.out.printf("  %.2f %s\n", sartist.getScore(), sartist.getItem().getName());
                 }
@@ -176,7 +194,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Blogs for " + artist.getName());
-                    DocumentList<Blog> blogs = artistAPI.getBlogs(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Blog> blogs = artistAPI.getBlogs(artist, 0, displayCount);
                     System.out.printf("Total Blogs %d\n", blogs.getTotal());
                     for (Blog blog : blogs.getDocuments()) {
                         blog.dump();
@@ -198,7 +216,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Audio for " + artist.getName());
-                    DocumentList<Audio> audioList = artistAPI.getAudio(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Audio> audioList = artistAPI.getAudio(artist, 0, displayCount);
                     System.out.printf("Total audio %d\n", audioList.getTotal());
                     for (Audio audio : audioList.getDocuments()) {
                         audio.dump();
@@ -220,7 +238,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Video for " + artist.getName());
-                    DocumentList<Video> videoList = artistAPI.getVideo(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Video> videoList = artistAPI.getVideo(artist, 0, displayCount);
                     System.out.printf("Total audio %d\n", videoList.getTotal());
                     for (Video video : videoList.getDocuments()) {
                         video.dump();
@@ -242,7 +260,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("News for " + artist.getName());
-                    DocumentList<News> newsList = artistAPI.getNews(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<News> newsList = artistAPI.getNews(artist, 0, displayCount);
                     System.out.printf("Total news %d\n", newsList.getTotal());
                     for (News news : newsList.getDocuments()) {
                         news.dump();
@@ -264,7 +282,7 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Reviews for " + artist.getName());
-                    DocumentList<Review> reviews = artistAPI.getReviews(artist, 0, ArtistAPI.MAX_ROWS);
+                    DocumentList<Review> reviews = artistAPI.getReviews(artist, 0, displayCount);
                     System.out.printf("Total Reviews %d\n", reviews.getTotal());
                     for (Review review : reviews.getDocuments()) {
                         review.dump();
@@ -342,7 +360,7 @@ public class EchonestDevShell {
         shell.add("top_hot", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
-                List<Scored<Artist>> hotArtists = artistAPI.getTopHotttArtists(ArtistAPI.MAX_ROWS);
+                List<Scored<Artist>> hotArtists = artistAPI.getTopHotttArtists(displayCount);
                 for (Scored<Artist> sartist : hotArtists) {
                     System.out.printf("%.2f %s\n", sartist.getScore(), sartist.getItem().getName());
                 }

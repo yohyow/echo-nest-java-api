@@ -197,6 +197,12 @@ public class Commander {
 
     public Document postCommand(String command, Map<String, Object> params) throws IOException {
         Document document = null;
+        if (trace || traceSends) {
+            System.out.println("Posting-->     " + command);
+            for (String key : params.keySet()) {
+                System.out.printf("  %s:%s\n", key, params.get(key));
+            }
+        }
         InputStream is = post(command, params);
         commandsSent++;
 

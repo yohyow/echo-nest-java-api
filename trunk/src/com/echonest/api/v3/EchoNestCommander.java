@@ -47,6 +47,10 @@ public class EchoNestCommander {
      * @throws com.echonest.api.v3.EchoNestException
      */
     public EchoNestCommander(String key, String prefix) throws EchoNestException {
+        this(key, prefix, "");
+    }
+
+    public EchoNestCommander(String key, String prefix, String suffix) throws EchoNestException {
         if (key == null || key.length() == 0) {
             System.err.println("No API Key is defined. Get a key from http://developer.echonest.com");
             throw new EchoNestException(EchoNestException.ERR_NO_KEY, "No API key defined");
@@ -63,7 +67,7 @@ public class EchoNestCommander {
                 prefix = "http://developer.echonest.com/api/";
             }
 
-            commander = new Commander("EchoNest", prefix, "&version=3&api_key=" + key);
+            commander = new Commander("EchoNest", prefix, suffix + "&version=3&api_key=" + key);
             commander.setRetries(5);
             commander.setMinimumCommandPeriod(500L);
             commander.setTimeout(30 * 1000);

@@ -43,6 +43,8 @@ public class TrackAPI extends EchoNestCommander {
         ERROR
     };
 
+    private int analysisVersion =  1;
+
     /**
      * Creates an instance of the TrackAPI class using an API key specified in the
      * the property ECHO_NEST_API_KEY
@@ -62,6 +64,12 @@ public class TrackAPI extends EchoNestCommander {
         super(key, null);
     }
 
+    public TrackAPI(String key, String prefix, int version) throws EchoNestException {
+        super(key, prefix, version == 3 ? "&analysis_version=3" : "");
+        analysisVersion = version;
+    }
+
+
     /**
      * Upload a track
      * @param trackUrl the url of the track
@@ -75,6 +83,9 @@ public class TrackAPI extends EchoNestCommander {
             params.put("wait", (wait ? "Y" : "N"));
             params.put("version", "3");
             params.put("api_key", getKey());
+            if (analysisVersion > 1) {
+                params.put("analysis_version", analysisVersion);
+            }
             params.put("url", trackUrl.toExternalForm());
             if (wait) {
                 setTimeout(180 * 1000);
@@ -110,6 +121,7 @@ public class TrackAPI extends EchoNestCommander {
                 params.put("wait", (wait ? "Y" : "N"));
                 params.put("version", "3");
                 params.put("api_key", getKey());
+                params.put("analysis_version", analysisVersion);
                 params.put("file", trackFile);
 
                 if (wait) {
