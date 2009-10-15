@@ -548,6 +548,23 @@ public class EchonestDevShell {
             }
         });
 
+        shell.add("trackAnalysisVersion", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length >= 2) {
+                    int version = Integer.parseInt(args[1]);
+                    trackAPI = new TrackAPI(System.getProperty("ECHO_NEST_API_KEY"), null, version);
+                } else {
+                    System.out.println("trackAnalysisVersion " + trackAPI.getAnalysisVersion());
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets/sets the analysis version to use";
+            }
+        });
+
         shell.add("trackUploadDir", new ShellCommand() {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length >= 2) {
