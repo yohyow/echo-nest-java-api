@@ -244,14 +244,18 @@ public class EchoNestCommander {
         }
     }
 
-    protected Document sendCommand(String name, String url) throws IOException, EchoNestException {
-        return sendCommand(name, url, false);
+    protected Document sendCommand(String name, String url, boolean useCache) throws IOException, EchoNestException {
+        return sendCommand(name, url, false, useCache);
     }
 
-    protected Document sendCommand(String name, String url, boolean usePost) throws IOException, EchoNestException {
+    protected Document sendCommand(String name, String url) throws IOException, EchoNestException {
+        return sendCommand(name, url, false, true);
+    }
+
+    protected Document sendCommand(String name, String url, boolean usePost, boolean useCache) throws IOException, EchoNestException {
         Document doc = null;
 
-        if (!usePost) {
+        if (!usePost && useCache) {
             doc = cache.get(url);
         }
 
@@ -261,7 +265,7 @@ public class EchoNestCommander {
                 doc = commander.sendCommand(url, usePost);
                 checkStatus(doc);
                 sm.end(tracker);
-                if (!usePost) {
+                if (!usePost && useCache) {
                     cache.put(url, doc);
                 }
             } finally {
