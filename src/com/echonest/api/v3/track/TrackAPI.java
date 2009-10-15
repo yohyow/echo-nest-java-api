@@ -30,6 +30,7 @@ import org.w3c.dom.NodeList;
  */
 public class TrackAPI extends EchoNestCommander {
 
+    public final static int DEFAULT_ANALYSIS_VERSION = 3;
     /** The status of an analysis */
     public enum AnalysisStatus {
 
@@ -39,11 +40,13 @@ public class TrackAPI extends EchoNestCommander {
         PENDING,
         /** track analysis is complete */
         COMPLETE,
+        /** track analysis is unavailable */
+        UNAVAILABLE,
         /** track analysis failed */
         ERROR
     };
 
-    private int analysisVersion =  1;
+    private int analysisVersion =  DEFAULT_ANALYSIS_VERSION;
 
     /**
      * Creates an instance of the TrackAPI class using an API key specified in the
@@ -61,11 +64,11 @@ public class TrackAPI extends EchoNestCommander {
      * @throws EchoNestException 
      */
     public TrackAPI(String key) throws EchoNestException {
-        super(key, null);
+        this(key, null, DEFAULT_ANALYSIS_VERSION);
     }
 
     public TrackAPI(String key, String prefix, int version) throws EchoNestException {
-        super(key, prefix, version == 3 ? "&analysis_version=3" : "");
+        super(key, prefix, "&analysis_version=" + version );
         analysisVersion = version;
     }
 
@@ -83,9 +86,7 @@ public class TrackAPI extends EchoNestCommander {
             params.put("wait", (wait ? "Y" : "N"));
             params.put("version", "3");
             params.put("api_key", getKey());
-            if (analysisVersion > 1) {
-                params.put("analysis_version", analysisVersion);
-            }
+            params.put("analysis_version", analysisVersion);
             params.put("url", trackUrl.toExternalForm());
             if (wait) {
                 setTimeout(180 * 1000);
@@ -94,7 +95,6 @@ public class TrackAPI extends EchoNestCommander {
             Element docElement = doc.getDocumentElement();
             Element trackElement = (Element) XmlUtil.getDescendent(docElement, "track");
             String trackID = trackElement.getAttribute("id");
-            String md5 = trackElement.getAttribute("md5");
             boolean ready = trackElement.getAttribute("md5").equals("true");
             if (!ready) {
                 waitForID(trackID);
@@ -271,17 +271,29 @@ public class TrackAPI extends EchoNestCommander {
     /**
      * Retrieves ID3 metadata for a track
      * @param idOrMd5 the ID or the MD5 of the track
-     * @return beats per minute
+     * @return metadata
      * @throws com.echonest.api.v3.artist.EchoNestException
      */
     public Metadata getMetadata(String idOrMd5) throws EchoNestException {
+        return getMetadata(idOrMd5, true);
+    }
+
+    /**
+     * Retrieves ID3 metadata for a track
+     * @param idOrMd5 the ID or the MD5 of the track
+     * @param useCache if true use the cache.
+     * @return metadata
+     * @throws com.echonest.api.v3.artist.EchoNestException
+     */
+    public Metadata getMetadata(String idOrMd5, boolean useCache) throws EchoNestException {
         try {
             String cmdURL = "get_metadata?" + getIDParam(idOrMd5);
-            Document doc = sendCommand("get_metadata", cmdURL);
+            Document doc = sendCommand("get_metadata", cmdURL, useCache);
             Element docElement = doc.getDocumentElement();
             Element analysisElement = XmlUtil.getFirstElement(docElement, "analysis");
             Metadata metadata = new Metadata();
             metadata.setArtist(XmlUtil.getDescendentText(analysisElement, "artist"));
+            metadata.setStatus(AnalysisStatus.valueOf(XmlUtil.getDescendentText(analysisElement, "status")));
             metadata.setTitle(XmlUtil.getDescendentText(analysisElement, "title"));
             metadata.setRelease(XmlUtil.getDescendentText(analysisElement, "release"));
             metadata.setGenre(XmlUtil.getDescendentText(analysisElement, "genre"));
@@ -559,20 +571,8 @@ public class TrackAPI extends EchoNestCommander {
      * @throws com.echonest.api.v3.artist.EchoNestException
      */
     public AnalysisStatus getAnalysisStatus(String idOrMd5) throws EchoNestException {
-
-        // there is a race condition on the server side - when wecan get an ID
-        // back from a track upload call, there's a brief period of time where
-        // it is not a valid id ...  so we try to accomodate this here.
-        try {
-            getDuration(idOrMd5);
-            return AnalysisStatus.COMPLETE;
-        } catch (EchoNestException e) {
-            if (e.getCode() == 11) {
-                return AnalysisStatus.PENDING;
-            } else {
-                throw e;
-            }
-        }
+        Metadata metadata = getMetadata(idOrMd5, false);
+        return metadata.getStatus();
     }
 
     /**
@@ -580,13 +580,10 @@ public class TrackAPI extends EchoNestCommander {
      * @param idOrMd5 the analysis id or md5
      * @return true if the track is known
      */
-    public boolean isKnownTrack(String idOrMd5) {
-        try {
-            getAnalysisStatus(idOrMd5);
-            return true;
-        } catch (EchoNestException e) {
-            return false;
-        }
+    public boolean isKnownTrack(String idOrMd5) throws EchoNestException {
+        return getAnalysisStatus(idOrMd5) != AnalysisStatus.UNKNOWN &&
+               getAnalysisStatus(idOrMd5) != AnalysisStatus.UNAVAILABLE;
+
     }
 
     /**
@@ -595,7 +592,7 @@ public class TrackAPI extends EchoNestCommander {
      * @return true if the track is known
      * @throws IOException
      */
-    public boolean isKnownTrack(File file) throws IOException {
+    public boolean isKnownTrack(File file) throws IOException, EchoNestException {
         return isKnownTrack(getMD5(file));
     }
 
@@ -619,20 +616,34 @@ public class TrackAPI extends EchoNestCommander {
     }
 
     /**
+     * Gets the analysis version in use
+     * @return the analysis version
+     */
+    public int getAnalysisVersion() {
+        return analysisVersion;
+    }
+
+
+
+    /**
      * When we upload a track, we are returned an ID. However, this ID may not
      * be a valid ID for a 'little while'. This method polls the Echo Nest with an
      * ID until the ID is valid. Should only be called with an ID returned from trackUpload
      * @param id
      */
-    private void waitForID(String id) {
-        while (true) {
+    private void waitForID(String id) throws EchoNestException {
+        int tries = 0;
+        int maxTries = 5;
+        while (getAnalysisStatus(id) == AnalysisStatus.UNKNOWN) {
             try {
-                getAnalysisStatus(id);
-                return;
-            } catch (EchoNestException e) {
-                if (e.getCode() != EchoNestException.ERR_INVALID_PARAMETER) {
-                    return;
+                if (tries++ > maxTries) {
+                    throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY, 
+                            "Never got an ID for an uploaded track.");
                 }
+                System.out.println("Waiting for ID ");
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                break;
             }
         }
     }
