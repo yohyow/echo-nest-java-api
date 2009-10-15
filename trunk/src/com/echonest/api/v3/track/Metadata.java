@@ -5,10 +5,13 @@
 
 package com.echonest.api.v3.track;
 
+import com.echonest.api.v3.track.TrackAPI.AnalysisStatus;
+
 /**
  * Represents a track ID3 metadata
  */
 public class Metadata {
+    private TrackAPI.AnalysisStatus status;
     private String artist = "";
     private String release = "";
     private String title = "";
@@ -27,6 +30,14 @@ public class Metadata {
 
     void setArtist(String artist) {
         this.artist = artist;
+    }
+
+    public AnalysisStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AnalysisStatus status) {
+        this.status = status;
     }
 
     /**
@@ -104,6 +115,7 @@ public class Metadata {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        sb.append("Status    : " + status + "\n");
         if (artist != null) {
             sb.append("Artist    : " + artist + "\n");
         }
