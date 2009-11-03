@@ -31,6 +31,7 @@ import org.w3c.dom.NodeList;
 public class TrackAPI extends EchoNestCommander {
 
     public final static int DEFAULT_ANALYSIS_VERSION = 3;
+
     /** The status of an analysis */
     public enum AnalysisStatus {
 
@@ -45,8 +46,7 @@ public class TrackAPI extends EchoNestCommander {
         /** track analysis failed */
         ERROR
     };
-
-    private int analysisVersion =  DEFAULT_ANALYSIS_VERSION;
+    private int analysisVersion = DEFAULT_ANALYSIS_VERSION;
 
     /**
      * Creates an instance of the TrackAPI class using an API key specified in the
@@ -64,14 +64,30 @@ public class TrackAPI extends EchoNestCommander {
      * @throws EchoNestException 
      */
     public TrackAPI(String key) throws EchoNestException {
-        this(key, null, DEFAULT_ANALYSIS_VERSION);
+        this(key, DEFAULT_ANALYSIS_VERSION);
     }
 
-    public TrackAPI(String key, String prefix, int version) throws EchoNestException {
-        super(key, prefix, "&analysis_version=" + version );
+    /**
+     * Creates an instance of the TrackAPI class
+     * @param key the TrackAPI key (available at http://developer.echonest.com/ )
+     * @param version the analyzer version to use
+     * @throws EchoNestException
+     */
+    public TrackAPI(String key, int version) throws EchoNestException {
+        this(key, null, version);
+    }
+
+    /**
+     * Creates an instance of the TrackAPI class
+     * @param key the TrackAPI key (available at http://developer.echonest.com/ )
+     * @param prefix the prefix for the command.
+     * @param version the analyzer version to use
+     * @throws EchoNestException
+     */
+    TrackAPI(String key, String prefix, int version) throws EchoNestException {
+        super(key, prefix, "&analysis_version=" + version);
         analysisVersion = version;
     }
-
 
     /**
      * Upload a track
@@ -157,6 +173,30 @@ public class TrackAPI extends EchoNestCommander {
      */
     public String getMD5(File file) throws IOException {
         return Utilities.md5(file);
+    }
+
+    /**
+     * Gets the duration of a previously analyzed track
+     * @param idOrMd5 the ID or the MD5 of the track
+     * @return the duration of the track in seconds
+     * @throws com.echonest.api.v3.artist.EchoNestException
+     */
+    public String reanalyze(String idOrMd5) throws EchoNestException {
+        try {
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("version", "3");
+            params.put("api_key", getKey());
+            params.put("analysis_version", analysisVersion);
+            if (isID(idOrMd5)) {
+                params.put("id", idOrMd5);
+            } else {
+                params.put("md5", idOrMd5);
+            }
+            Document doc = postCommand("analyze", "analyze", params);
+            return idOrMd5;
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
     }
 
     /**
@@ -564,6 +604,10 @@ public class TrackAPI extends EchoNestCommander {
         return pname + "=" + idOrMd5;
     }
 
+    private boolean isID(String idOrMd5) {
+        return idOrMd5.startsWith("music:");
+    }
+
     /**
      * Gets the analysis status for the given ID
      * @param idOrMd5 the analysis id or md5
@@ -581,8 +625,8 @@ public class TrackAPI extends EchoNestCommander {
      * @return true if the track is known
      */
     public boolean isKnownTrack(String idOrMd5) throws EchoNestException {
-        return getAnalysisStatus(idOrMd5) != AnalysisStatus.UNKNOWN &&
-               getAnalysisStatus(idOrMd5) != AnalysisStatus.UNAVAILABLE;
+        AnalysisStatus status = getAnalysisStatus(idOrMd5);
+        return status != AnalysisStatus.UNKNOWN && status != AnalysisStatus.UNAVAILABLE;
 
     }
 
@@ -623,8 +667,6 @@ public class TrackAPI extends EchoNestCommander {
         return analysisVersion;
     }
 
-
-
     /**
      * When we upload a track, we are returned an ID. However, this ID may not
      * be a valid ID for a 'little while'. This method polls the Echo Nest with an
@@ -637,7 +679,7 @@ public class TrackAPI extends EchoNestCommander {
         while (getAnalysisStatus(id) == AnalysisStatus.UNKNOWN) {
             try {
                 if (tries++ > maxTries) {
-                    throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY, 
+                    throw new EchoNestException(EchoNestException.CLIENT_SERVER_INCONSISTENCY,
                             "Never got an ID for an uploaded track.");
                 }
                 System.out.println("Waiting for ID ");

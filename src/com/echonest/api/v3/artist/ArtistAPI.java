@@ -236,6 +236,46 @@ public class ArtistAPI extends EchoNestCommander {
     }
 
     /**
+     * Returns a list of biographies for the given artist
+     * @param artist the artist of interest
+     * @param startRow the starting row of the query
+     * @param count the number of items returned
+     * @return a list of bios for the artist
+     * @throws EchoNestException
+     */
+    public List<Biography> getBiographies(Artist artist) throws EchoNestException {
+        return getBiographies(artist.getId());
+    }
+
+    /**
+     * Returns a list of bios about the given artist
+     * @param id of the artist of interest
+     * @param startRow the starting row of the query
+     * @param count the number of items returned
+     * @return a list of bios about the artist
+     * @throws EchoNestException
+     */
+    public List<Biography> getBiographies(String id) throws EchoNestException {
+        try {
+            List<Biography> list = new ArrayList<Biography>();
+            String url = "get_biographies?id=" + id;
+            Document doc = sendCommand("get_biographies", url);
+            Element docElement = doc.getDocumentElement();
+            NodeList nodes = docElement.getElementsByTagName("biography");
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element bioElement = (Element) nodes.item(i);
+                String text = XmlUtil.getDescendentText(bioElement, "text");
+                String site  = XmlUtil.getDescendentText(bioElement, "site");
+                String surl  = XmlUtil.getDescendentText(bioElement, "url");
+                list.add(new Biography(text, site, surl));
+            }
+            return list;
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
+    }
+
+    /**
      * Get found reviews for an artist's work
      * @param artist the artist of interest
      * @param startRow the starting row of the query

@@ -12,6 +12,7 @@ import com.echonest.api.v3.artist.Blog;
 import com.echonest.api.v3.artist.DocumentList;
 import com.echonest.api.v3.artist.ArtistAPI;
 import com.echonest.api.v3.EchoNestException;
+import com.echonest.api.v3.artist.Biography;
 import com.echonest.api.v3.artist.News;
 import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
@@ -40,7 +41,7 @@ public class EchonestDevShell {
 
     public EchonestDevShell() throws EchoNestException {
         artistAPI = new ArtistAPI();
-        trackAPI = new TrackAPI(System.getProperty("ECHO_NEST_API_KEY"), null, 3);
+        trackAPI = new TrackAPI();
         shell = new Shell();
         shell.setPrompt("nest% ");
         addEchoNestCommands();
@@ -264,6 +265,28 @@ public class EchonestDevShell {
                     System.out.printf("Total news %d\n", newsList.getTotal());
                     for (News news : newsList.getDocuments()) {
                         news.dump();
+                    }
+                } else {
+                    System.out.println("Can't find artist");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets news for an artist";
+            }
+        });
+
+        shell.add("get_bio", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                Artist artist = getArtist(ci.mash(args, 1));
+                if (artist != null) {
+                    System.out.println("Biographies for " + artist.getName());
+                    List<Biography> biographies = artistAPI.getBiographies(artist);
+                    System.out.printf("Total bios %d\n", biographies.size());
+                    for (Biography bio : biographies) {
+                        System.out.println(bio.toString());
                     }
                 } else {
                     System.out.println("Can't find artist");
@@ -553,7 +576,7 @@ public class EchonestDevShell {
             public String execute(Shell ci, String[] args) throws Exception {
                 if (args.length >= 2) {
                     int version = Integer.parseInt(args[1]);
-                    trackAPI = new TrackAPI(System.getProperty("ECHO_NEST_API_KEY"), null, version);
+                    trackAPI = new TrackAPI(System.getProperty("ECHO_NEST_API_KEY"), version);
                 } else {
                     System.out.println("trackAnalysisVersion " + trackAPI.getAnalysisVersion());
                 }
