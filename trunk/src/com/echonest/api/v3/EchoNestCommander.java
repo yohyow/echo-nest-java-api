@@ -132,7 +132,7 @@ public class EchoNestCommander {
     /**
      * Gets the maximum size of the cache
      * @param size
-     * @return
+     * @return the maximum size of the cache
      */
     public int getMaxCacheSize(int size) {
         return cache.getMaxSize();

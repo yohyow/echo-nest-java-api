@@ -5,19 +5,18 @@
 
 package com.echonest.api.v3.artist;
 
+import com.echonest.api.v3.EchoNestException;
+import org.w3c.dom.Element;
+
 /**
  *
  * @author plamere
  */
-public class Biography {
-    private String text;
-    private String site;
-    private String url;
+public class Biography extends Document {
+    private static String[] fields = {"text", "url"};
 
-    Biography(String text, String site, String url) {
-        this.text = text;
-        this.site = site;
-        this.url = url;
+    Biography(Element element) throws EchoNestException {
+        super(element, fields);
     }
 
     /**
@@ -25,7 +24,7 @@ public class Biography {
      * @return the site
      */
     public String getSite() {
-        return site;
+        return get("url");
     }
 
     /**
@@ -33,7 +32,7 @@ public class Biography {
      * @return the text of the biography
      */
     public String getText() {
-        return text;
+        return get("text");
     }
 
     /**
@@ -41,11 +40,6 @@ public class Biography {
      * @return the url
      */
     public String getUrl() {
-        return url;
-    }
-
-    @Override
-    public String toString() {
-         return text + "\n( via " + site + " " + url + ")\n\n";
+        return get("url");
     }
 }
