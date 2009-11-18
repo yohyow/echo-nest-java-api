@@ -141,7 +141,7 @@ public class ArtistAPI extends EchoNestCommander {
 
     /**
      * Searches for artists by description. Only available for premium API users
-     * @param a description of the type of artists
+     * @param description a description of the type of artists
      * @param count the max number returned
      * @throws EchoNestException
      */
@@ -322,8 +322,8 @@ public class ArtistAPI extends EchoNestCommander {
      * @return a list of bios for the artist
      * @throws EchoNestException
      */
-    public List<Biography> getBiographies(Artist artist) throws EchoNestException {
-        return getBiographies(artist.getId());
+    public DocumentList<Biography> getBiographies(Artist artist, int startRow, int count) throws EchoNestException {
+        return getBiographies(artist.getId(), startRow, count);
     }
 
     /**
@@ -334,19 +334,27 @@ public class ArtistAPI extends EchoNestCommander {
      * @return a list of bios about the artist
      * @throws EchoNestException
      */
-    public List<Biography> getBiographies(String id) throws EchoNestException {
+    public DocumentList<Biography> getBiographies(String id, int startRow, int count) throws EchoNestException {
         try {
-            List<Biography> list = new ArrayList<Biography>();
-            String url = "get_biographies?id=" + id;
+            String url = "get_biographies?id=" + id + "&start=" + startRow + "&rows=" + count;
+
             Document doc = sendCommand("get_biographies", url);
             Element docElement = doc.getDocumentElement();
-            NodeList nodes = docElement.getElementsByTagName("biography");
-            for (int i = 0; i < nodes.getLength(); i++) {
-                Element bioElement = (Element) nodes.item(i);
-                String text = XmlUtil.getDescendentText(bioElement, "text");
-                String site  = XmlUtil.getDescendentText(bioElement, "site");
-                String surl  = XmlUtil.getDescendentText(bioElement, "url");
-                list.add(new Biography(text, site, surl));
+            Element similar = (Element) XmlUtil.getDescendent(docElement, "results");
+
+            String sfound = similar.getAttribute("found");
+            String sshown = similar.getAttribute("shown");
+            String sstart = similar.getAttribute("start");
+
+            int found = parseInt("get_biographies found", sfound);
+            int shown = parseInt("get_biographies shown", sshown);
+            int curStart = parseInt("get_biographies start", sstart);
+
+            DocumentList<Biography> list = new DocumentList<Biography>(found, curStart, shown);
+
+            NodeList itemList = similar.getElementsByTagName("doc");
+            for (int i = 0; i < itemList.getLength(); i++) {
+                list.add(new Biography((Element) itemList.item(i)));
             }
             return list;
         } catch (IOException ioe) {

@@ -344,9 +344,9 @@ public class EchonestDevShell {
                 Artist artist = getArtist(ci.mash(args, 1));
                 if (artist != null) {
                     System.out.println("Biographies for " + artist.getName());
-                    List<Biography> biographies = artistAPI.getBiographies(artist);
-                    System.out.printf("Total bios %d\n", biographies.size());
-                    for (Biography bio : biographies) {
+                    DocumentList<Biography> biographies = artistAPI.getBiographies(artist, 0, displayCount);
+                    System.out.printf("Total bios %d\n", biographies.getTotal());
+                    for (Biography bio : biographies.getDocuments()) {
                         System.out.println(bio.toString());
                     }
                 } else {
