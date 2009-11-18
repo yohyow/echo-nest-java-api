@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Element;
@@ -25,6 +26,10 @@ import org.w3c.dom.NodeList;
  * @author plamere
  */
 public class Document {
+    public static SimpleDateFormat ISO8601FORMAT
+                = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public static SimpleDateFormat RFC822DATEFORMAT
+            = new SimpleDateFormat("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Locale.US);
     private String id;
     private String type;
     private Map<String, String> values = new HashMap<String, String>();
@@ -74,15 +79,17 @@ public class Document {
             return 0f;
         }
     }
-
     Date getDate(String name) {
         String date = get(name);
-        SimpleDateFormat sdf = new SimpleDateFormat();
         try {
-            return sdf.parse(date);
+            return RFC822DATEFORMAT.parse(date);
         } catch (ParseException e) {
-            System.err.println("Bad date format " + date);
-            return null;
+            try {
+                return ISO8601FORMAT.parse(date);
+            } catch (ParseException ex) {
+                System.out.println("Can't parse " + date);
+                return null;
+            }
         }
     }
 
