@@ -13,7 +13,7 @@ import java.io.Serializable;
  * @param <T>  he type of the scored item.
  */
 
-public class Scored<T> implements Serializable {
+public class Scored<T> implements Serializable, Comparable<Scored<T>> {
     private T item;
     private double score;
 
@@ -46,5 +46,17 @@ public class Scored<T> implements Serializable {
      */
     public double getScore() {
         return score;
+    }
+
+
+    @Override
+    public int compareTo(Scored<T> o) {
+        if (getScore() > o.getScore()) {
+            return 1;
+        } else if (getScore() < o.getScore()) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 }

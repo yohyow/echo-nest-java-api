@@ -13,6 +13,7 @@ import com.echonest.api.v3.artist.DocumentList;
 import com.echonest.api.v3.artist.ArtistAPI;
 import com.echonest.api.v3.EchoNestException;
 import com.echonest.api.v3.artist.Biography;
+import com.echonest.api.v3.artist.Image;
 import com.echonest.api.v3.artist.News;
 import com.echonest.api.v3.artist.Review;
 import com.echonest.api.v3.artist.Scored;
@@ -93,6 +94,21 @@ public class EchonestDevShell {
 
             public String getHelp() {
                 return "searches for artists exact match  ";
+            }
+        });
+
+        shell.add("qbd", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                List<Artist> artists = artistAPI.searchArtistByDescription(ci.mash(args, 1));
+                for (Artist artist : artists) {
+                    System.out.println(artist.getId() + " " + artist.getName());
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "query by description - searches for artists by description";
             }
         });
 
@@ -211,6 +227,28 @@ public class EchonestDevShell {
             }
         });
 
+        shell.add("get_images", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                Artist artist = getArtist(ci.mash(args, 1));
+                if (artist != null) {
+                    System.out.println("Images for " + artist.getName());
+                    DocumentList<Image> images = artistAPI.getImages(artist, 0, displayCount);
+                    System.out.printf("Total Images %d\n", images.getTotal());
+                    for (Image image : images.getDocuments()) {
+                        image.dump();
+                    }
+                } else {
+                    System.out.println("Can't find artist");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets images for an artist";
+            }
+        });
+
         shell.add("get_audio", new ShellCommand() {
 
             public String execute(Shell ci, String[] args) throws Exception {
@@ -240,10 +278,33 @@ public class EchonestDevShell {
                 if (artist != null) {
                     System.out.println("Video for " + artist.getName());
                     DocumentList<Video> videoList = artistAPI.getVideo(artist, 0, displayCount);
-                    System.out.printf("Total audio %d\n", videoList.getTotal());
+                    System.out.printf("Total video %d\n", videoList.getTotal());
                     for (Video video : videoList.getDocuments()) {
                         video.dump();
                     }
+                } else {
+                    System.out.println("Can't find artist");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "gets video for an artist";
+            }
+        });
+
+        shell.add("get_terms", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                Artist artist = getArtist(ci.mash(args, 1));
+                if (artist != null) {
+                    System.out.println("Top terms for " + artist.getName());
+                    List<String> terms = artistAPI.getTopTerms(artist);
+                    System.out.printf("Total terms %d\n", terms.size());
+                    for (String term : terms) {
+                        System.out.print(term + ", ");
+                    }
+                    System.out.println();
                 } else {
                     System.out.println("Can't find artist");
                 }
@@ -416,6 +477,23 @@ public class EchonestDevShell {
                     trackAPI.setTrace(args[1].equals("true"));
                 } else {
                     System.out.println("Usage: trace true|false");
+                }
+                return "";
+            }
+
+            public String getHelp() {
+                return "enables/disables trace";
+            }
+        });
+
+        shell.add("traceAll", new ShellCommand() {
+
+            public String execute(Shell ci, String[] args) throws Exception {
+                if (args.length == 2) {
+                    artistAPI.setTraceAll(args[1].equals("true"));
+                    trackAPI.setTraceAll(args[1].equals("true"));
+                } else {
+                    System.out.println("Usage: traceAll true|false");
                 }
                 return "";
             }

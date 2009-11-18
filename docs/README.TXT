@@ -53,6 +53,12 @@ Type 'help' to show the list of availabe commands.  Try some:
 Revision History
 ----------------
 
+Version 1.3  - November 18, 2009
+    - added get_images call
+    - added get_biographies call
+    - increased return results for artist get_similar
+    - increased return results for get_top_hot_artists
+
 Version 1.1  - June 24, 2009
     - fixed bug where cache would grow without limits
     - added 'setMaxCacheSize' method to artist and track APIs

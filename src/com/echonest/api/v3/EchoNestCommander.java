@@ -172,6 +172,10 @@ public class EchoNestCommander {
         commander.setTraceSends(on);
     }
 
+    public void setTraceAll(boolean on) {
+        commander.setTrace(on);
+    }
+
     /**
      * Gets the number of API retries
      * @return the number of retries

@@ -109,6 +109,37 @@ public class ArtistAPI extends EchoNestCommander {
     }
 
     /**
+     * Searches for artists by description
+     * @param description description
+     * @return a list of matching artists, ordered by how well they match the query.
+     * @throws EchoNestException
+     */
+    public List<Artist> searchArtistByDescription(String description) throws EchoNestException {
+        List<Artist> artists = new ArrayList<Artist>();
+
+        try {
+            String cmdURL = "search_artists?type=description&query=" + encode(description);
+            Document doc = sendCommand("search_artist", cmdURL);
+            Element docElement = doc.getDocumentElement();
+            Element artistList = (Element) XmlUtil.getDescendent(docElement, "artists");
+            if (artistList != null) {
+                NodeList itemList = artistList.getElementsByTagName("artist");
+                for (int i = 0; i < itemList.getLength(); i++) {
+                    Element item = (Element) itemList.item(i);
+                    String name = XmlUtil.getDescendentText(item, "name");
+                    String enid = XmlUtil.getDescendentText(item, "id");
+                    Artist artist = new Artist(name, enid);
+                    artists.add(artist);
+                }
+            }
+            return artists;
+        } catch (IOException ioe) {
+            System.out.println("exception " + ioe);
+            throw new EchoNestException(ioe);
+        }
+    }
+
+    /**
      * Searches for artists by description. Only available for premium API users
      * @param a description of the type of artists
      * @param count the max number returned
@@ -180,6 +211,54 @@ public class ArtistAPI extends EchoNestCommander {
             NodeList itemList = similar.getElementsByTagName("doc");
             for (int i = 0; i < itemList.getLength(); i++) {
                 list.add(new Blog((Element) itemList.item(i)));
+            }
+            return list;
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
+    }
+
+    /**
+     * Returns a list of images for the given artist
+     * @param artist the artist of interest
+     * @param startRow the starting row of the query
+     * @param count the number of items returned
+     * @return a list of images for the artist
+     * @throws EchoNestException
+     */
+    public DocumentList<Image> getImages(Artist artist, int startRow, int count) throws EchoNestException {
+        return getImages(artist.getId(), startRow, count);
+    }
+
+    /**
+     * Returns a list of images for the given artist
+     * @param id of the artist of interest
+     * @param startRow the starting row of the query
+     * @param count the number of items returned
+     * @return a list of images for the artist
+     * @throws EchoNestException
+     */
+    public DocumentList<Image> getImages(String id, int startRow, int count) throws EchoNestException {
+        try {
+            String url = "get_images?id=" + id + "&start=" + startRow + "&rows=" + count;
+
+            Document doc = sendCommand("get_images", url);
+            Element docElement = doc.getDocumentElement();
+            Element similar = (Element) XmlUtil.getDescendent(docElement, "results");
+
+            String sfound = similar.getAttribute("found");
+            String sshown = similar.getAttribute("shown");
+            String sstart = similar.getAttribute("start");
+
+            int found = parseInt("get_images found", sfound);
+            int shown = parseInt("get_images shown", sshown);
+            int curStart = parseInt("get_images start", sstart);
+
+            DocumentList<Image> list = new DocumentList<Image>(found, curStart, shown);
+
+            NodeList itemList = similar.getElementsByTagName("doc");
+            for (int i = 0; i < itemList.getLength(); i++) {
+                list.add(new Image((Element) itemList.item(i)));
             }
             return list;
         } catch (IOException ioe) {
@@ -573,6 +652,41 @@ public class ArtistAPI extends EchoNestCommander {
         String[] ids = new String[1];
         ids[0] = id;
         return getSimilarArtists(ids, start, count, limit);
+    }
+
+    /**
+     * Gets the top terms for an artist. Note that this method works for 'priviledged API keys'
+     * @param artist the artist
+     * @return a list of top terms
+     * @throws EchoNestException
+     */
+    public List<String> getTopTerms(Artist artist) throws EchoNestException {
+        return getTopTerms(artist.getId());
+    }
+
+    /**
+     * Gets the top terms for an artist. Note that this method works for 'priviledged API keys'
+     * @param id the artist id
+     * @return a list of top terms
+     * @throws EchoNestException
+     */
+    public List<String> getTopTerms(String id) throws EchoNestException {
+        try {
+            List<String> terms = new ArrayList<String>();
+            String cmdURL = "get_profile?bucket=terms&id=" + id;
+
+            Document doc = sendCommand("getTopTerms", cmdURL);
+            Element docElement = doc.getDocumentElement();
+            NodeList itemList = docElement.getElementsByTagName("term");
+            for (int i = 0; i < itemList.getLength(); i++) {
+                Element item = (Element) itemList.item(i);
+                String term = item.getTextContent();
+                terms.add(term);
+            }
+            return terms;
+        } catch (IOException ioe) {
+            throw new EchoNestException(ioe);
+        }
     }
 
 
