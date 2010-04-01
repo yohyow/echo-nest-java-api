@@ -33,7 +33,7 @@ public class ArtistAPI extends EchoNestCommander {
     /**
      * Creates an instance of the ArtistAPI class using an ArtistAPI key specified in the
      * the property ECHO_NEST_API_KEY
-     * 
+     *
      * @throws EchoNestException
      */
     public ArtistAPI() throws EchoNestException {
@@ -53,7 +53,7 @@ public class ArtistAPI extends EchoNestCommander {
     /**
      * Given an Echo Nest Identifier get  the associated artist
      * @param id an Echo Nest Identifier
-     * @return an artist 
+     * @return an artist
      * @throws EchoNestException
      */
     public Artist getProfile(String id) throws EchoNestException {
@@ -80,15 +80,19 @@ public class ArtistAPI extends EchoNestCommander {
      * @param artistName the artist name
      * @param soundsLike if true, a 'sounds like' comparison is used in the search
      *  otherwise, only exact matches are returned.
+     * @param buckets an optional list of buckets to return along with the artist (e.g. hotness, familiarity, etc.)
      * @return a list of matching artists, ordered by how well they match the query.
+     *
      * @throws EchoNestException
      */
-    public List<Artist> searchArtist(String artistName, boolean soundsLike) throws EchoNestException {
+    public List<Artist> searchArtist(String artistName, boolean soundsLike, Bucket... buckets) throws EchoNestException {
         List<Artist> artists = new ArrayList<Artist>();
 
         try {
             String cmdURL = "search_artists?query=" + encode(artistName);
             cmdURL += "&sounds_like=" + (soundsLike ? "Y" : "N");
+            cmdURL += parseBuckets(buckets);
+
             Document doc = sendCommand("search_artist", cmdURL);
             Element docElement = doc.getDocumentElement();
             Element artistList = (Element) XmlUtil.getDescendent(docElement, "artists");
@@ -99,6 +103,9 @@ public class ArtistAPI extends EchoNestCommander {
                     String name = XmlUtil.getDescendentText(item, "name");
                     String enid = XmlUtil.getDescendentText(item, "id");
                     Artist artist = new Artist(name, enid);
+
+                    loadBuckets(artist, item, buckets);
+
                     artists.add(artist);
                 }
             }
@@ -508,8 +515,8 @@ public class ArtistAPI extends EchoNestCommander {
 
 
     /**
-     * 
-     * Returns a numerical estimation of how familiar an artist currently is to the world. 
+     *
+     * Returns a numerical estimation of how familiar an artist currently is to the world.
      * @param artist the artist of interest
      * @return a number between 0 and 1. 1 is most familiar
      * @throws EchoNestException
@@ -610,6 +617,100 @@ public class ArtistAPI extends EchoNestCommander {
             return artists;
         } catch (IOException ioe) {
             throw new EchoNestException(ioe);
+        }
+    }
+
+    /**
+     * Return similar artists given one or more artists for comparison.
+     * @param id the id of the seed artist
+     * @param start the starting position
+     * @param count the number of artists to return
+     * @param buckets an optional list of buckets to return along with the artist (e.g. hotness, familiarity, etc.)
+     * @return a scored list of similar artists
+     * @throws EchoNestException
+     */
+    public List<Scored<Artist>> getSimilarArtists(String id, int start, int count, double minFamiliarity,
+                                             double maxFamiliarity, Bucket... buckets) throws EchoNestException {
+        String[] ids = new String[1];
+        ids[0] = id;
+        return getSimilarArtists(ids, start, count, minFamiliarity, maxFamiliarity, buckets);
+    }
+
+    /**
+     * Return similar artists given one or more artists for comparison.
+     * @param ids the list of seed artists artist
+     * @param start the starting position
+     * @param count the number of artists to return
+     * @param minFamiliarity a search constraint on the minimum familiarity for returned artsts. Returned artists will
+     *          have at least minFamiliarity familiarity.
+     * @param maxFamiliarity the maximum amount of familiarity for returned artists. Returned artists will have no
+     *          more than maxFamiliarity familiarity.
+     * @param buckets an optional list of buckets to return along with the artist (e.g. hotness, familiarity, etc.)
+     * @return a scored list of similar artists
+     * @throws EchoNestException
+     */
+    public List<Scored<Artist>> getSimilarArtists(String[] ids, int start, int count, double minFamiliarity,
+                                            double maxFamiliarity, Bucket... buckets) throws EchoNestException {
+
+        String cmdURL = "get_similar?start=" + start + "&rows=" + count;
+        if (minFamiliarity > 0) {
+            cmdURL += "&min_familiarity=" + minFamiliarity;
+        }
+        if (maxFamiliarity < 1) {
+            cmdURL += "&max_familiarity=" + maxFamiliarity;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String id : ids) {
+            sb.append("&id=");
+            sb.append(id);
+        }
+        cmdURL += sb.toString();
+        cmdURL += parseBuckets(buckets);
+        List<Scored<Artist>> artists = fetchSimilarArtists(cmdURL, buckets);
+        if (artists.size() > count) {
+            System.err.printf("getSimilarArtists retuned %d, expected %d\n", artists.size(), count);
+            artists = artists.subList(0, count);
+        }
+        return artists;
+    }
+
+    /**
+     * Turns a group of buckets into a URL fragment. Generally this is called before a remote search call.
+     *
+     * @param buckets
+     * @return
+     */
+    private String parseBuckets(Bucket... buckets) {
+        StringBuilder builder = new StringBuilder("");
+
+        for (Bucket b : buckets) {
+            builder.append("&bucket=" + b.getName());
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Assigns the given buckets to the artist. This is generally called after a search or
+     * similarity call to wire up the buckets to the artist.
+     *
+     * @param a
+     * @param item
+     * @param buckets
+     * @throws IOException
+     */
+    private void loadBuckets(Artist a, Element item, Bucket... buckets) throws IOException {
+        for (Bucket b : buckets) {
+            String text = XmlUtil.getDescendentText(item, b.getName());
+            if (text != null && !text.equals("")) {
+                // groovy would help this situation...
+                if (b.equals(Bucket.FAMILIARITY)) {
+                    a.setFamiliarity(parseFloat("familiarity", text));
+                }
+                else if (b.equals(Bucket.HOTNESS)) {
+                    a.setHotness(parseFloat("hotness", text));
+                }
+            }
         }
     }
 
@@ -738,7 +839,15 @@ public class ArtistAPI extends EchoNestCommander {
         return artists;
     }
 
-    private List<Scored<Artist>> fetchSimilarArtists(String url) throws EchoNestException {
+    /**
+     * Sten -- added bucket support
+     *
+     * @param url
+     * @param buckets
+     * @return
+     * @throws EchoNestException
+     */
+    private List<Scored<Artist>> fetchSimilarArtists(String url, Bucket... buckets) throws EchoNestException {
         try {
             List<Scored<Artist>> artists = new ArrayList<Scored<Artist>>();
 
@@ -753,6 +862,9 @@ public class ArtistAPI extends EchoNestCommander {
                 String srank = XmlUtil.getDescendentText(item, "rank");
                 int rank = parseInt("get_similar rank", srank);
                 Artist artist = new Artist(name, enid);
+
+                loadBuckets(artist, item, buckets);
+
                 artists.add(new Scored<Artist>(artist, 1.0 / rank));
             }
             return artists;
@@ -761,12 +873,9 @@ public class ArtistAPI extends EchoNestCommander {
         }
     }
 
-
-
-
     /**
-     * Get links to the artist's official site, MusicBrainz site, MySpace site, 
-     * Wikipedia article, Amazon list, and iTunes page. 
+     * Get links to the artist's official site, MusicBrainz site, MySpace site,
+     * Wikipedia article, Amazon list, and iTunes page.
      * @param artist the artist of interest
      * @return the links for the artist
      * @throws EchoNestException

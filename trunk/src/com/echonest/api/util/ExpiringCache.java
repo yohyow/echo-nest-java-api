@@ -20,10 +20,11 @@ import java.util.Set;
 
 
 /**
+ * Sten -- Made Serializable and guarded against ConcurrentModificationExceptions during the cache load.
  *
  * @author plamere
  */
-public class ExpiringCache<T> {
+public class ExpiringCache<T extends Serializable> implements Serializable {
     private int maxSize = 1000;
 
     // an LRU cache
@@ -130,11 +131,10 @@ public class ExpiringCache<T> {
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 Object cacheObj = ois.readObject();
                 if (cacheObj != null) {
-                    HashMap<String, TimedItem<T>> newCache = (HashMap<String, TimedItem<T>>) cacheObj;
-                    for (String key : newCache.keySet()) {
-                        TimedItem<T> ti = newCache.get(key);
-                        if (!isExpired(ti)) {
-                            cache.put(key, ti);
+                   Map<String, TimedItem<T>> newCache = (Map<String, TimedItem<T>>) cacheObj;
+                    for (Map.Entry<String, TimedItem<T>> entry : newCache.entrySet()) {
+                        if (!isExpired(entry.getValue())) {
+                            cache.put(entry.getKey(), entry.getValue());
                         }
                     }
                 }
