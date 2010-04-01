@@ -8,13 +8,19 @@ package com.echonest.api.v3.artist;
 import java.io.Serializable;
 
 /**
- * Represents an Echo Nest artist
+ * Represents an Echo Nest artist.
+ *
+ * Sten -- Added familiarity and hotness for bucket support.
+ *
  * @author plamere
  */
 public class Artist implements Serializable {
     private static final long serialVersionUID = 7654321L;
     private String name;
     private String id;
+
+    private float familiarity;
+    private float hotness;
 
     /**
      * Creates an artist
@@ -41,6 +47,22 @@ public class Artist implements Serializable {
      */
     public String getName() {
         return name;
+    }
+
+    public float getFamiliarity() {
+        return familiarity;
+    }
+
+    public float getHotness() {
+        return hotness;
+    }
+
+    void setFamiliarity(float familiarity) {
+        this.familiarity = familiarity;
+    }
+
+    void setHotness(float hotness) {
+        this.hotness = hotness;
     }
 
     @Override

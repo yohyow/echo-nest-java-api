@@ -6,6 +6,7 @@ package com.echonest.api.v3;
 
 import com.echonest.api.util.*;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
@@ -19,6 +20,8 @@ import org.w3c.dom.Element;
  * This client supports cacheing of the return results. The cache is enabled by
  * default.
  *
+ * Sten - Made the cache support general serializable objects
+ *
  * @author plamere
  */
 public class EchoNestCommander {
@@ -27,14 +30,14 @@ public class EchoNestCommander {
     public final static int MAX_ROWS = 15;
     private Commander commander;
     private StatsManager sm = new StatsManager();
-    private ExpiringCache<Document> cache;
+    private ExpiringCache<Serializable> cache;
     private String key;
     private boolean ignoreParsingErrors = true;
 
     /**
-     * Creates an instance of the EchoNest class using an API key specified in the 
+     * Creates an instance of the EchoNest class using an API key specified in the
      * the property ECHO_NEST_API_KEY
-     * 
+     *
      * @throws com.echonest.api.v3.EchoNestException
      */
     public EchoNestCommander() throws EchoNestException {
@@ -71,7 +74,7 @@ public class EchoNestCommander {
             commander.setRetries(5);
             commander.setMinimumCommandPeriod(500L);
             commander.setTimeout(30 * 1000);
-            cache = new ExpiringCache<Document>();
+            cache = new ExpiringCache<Serializable>();
             setMaxCacheTime(7 * 24 * 60 * 60 * 1000L);
         } catch (IOException ioe) {
             throw new EchoNestException(ioe);
@@ -260,7 +263,7 @@ public class EchoNestCommander {
         Document doc = null;
 
         if (!usePost && useCache) {
-            doc = cache.get(url);
+            doc = (Document) cache.get(url);
         }
 
         if (doc == null) {
@@ -270,7 +273,7 @@ public class EchoNestCommander {
                 checkStatus(doc);
                 sm.end(tracker);
                 if (!usePost && useCache) {
-                    cache.put(url, doc);
+                    cache.put(url, (Serializable) doc);
                 }
             } finally {
                 sm.close(tracker);

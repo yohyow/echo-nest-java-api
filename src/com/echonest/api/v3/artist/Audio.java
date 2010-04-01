@@ -10,12 +10,18 @@ import java.util.Date;
 import org.w3c.dom.Element;
 
 /**
- * Represents an audio file
+ * Represents an audio file.
+ *
+ * Sten -- Added ability to set the URL for caching purposes.
+ *
  * @author plamere
  */
 public class Audio extends Document {
     private static String[] fields = {"artist_id", "artist", "release",  "title", "url", "link", "date", "length" };
     private Artist artist = null;
+
+    private String url;
+
 
     Audio(Element element) throws EchoNestException {
         super(element, fields);
@@ -55,7 +61,7 @@ public class Audio extends Document {
     }
 
     /**
-     * Gets the audio title 
+     * Gets the audio title
      * @return the title
      */
     public String getTitle() {
@@ -84,7 +90,11 @@ public class Audio extends Document {
      * @return the URL
      */
     public String getUrl() {
-        return get("url");
+        return url != null ? url : get("url");
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     /**
